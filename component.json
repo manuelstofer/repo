@@ -1,0 +1,13 @@
+{
+  "name": "storage",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "dependencies": {
+    "component/emitter": "*"
+  },
+  "scripts": [
+    "index.js",
+    "client/client.js"
+  ]
+}

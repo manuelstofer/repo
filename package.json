@@ -1,0 +1,22 @@
+{
+    "name": "storage",
+    "version": "0.0.1",
+    "description": "",
+    "keywords": [],
+    "author": "Manuel Stofer <manuel@takimata.ch>",
+    "dependencies": {
+        "underscore": "*",
+        "express": "*",
+        "socket.io": "*"
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "chai": "*",
+        "component": "*",
+        "mocha-phantomjs": "*"
+    },
+    "main": "index",
+    "scripts": {
+        "test": "make test"
+    }
+}
