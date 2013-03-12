@@ -15,7 +15,7 @@
         "component": "*",
         "mocha-phantomjs": "*"
     },
-    "main": "index",
+    "main": "server",
     "scripts": {
         "test": "make test"
     }

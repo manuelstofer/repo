@@ -8,6 +8,7 @@
   },
   "scripts": [
     "index.js",
-    "client/client.js"
+    "client/client.js",
+    "client/mock.js"
   ]
 }

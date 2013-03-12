@@ -14,15 +14,15 @@ module.exports = function (options) {
         },
 
         get: function (id, fn) {
-            var err = objs[id]? null: 'error';
+            var err = typeof objs[id] !== 'undefined' ? null: 'error';
             fn(err, objs[id]);
         },
 
         del: function (id, fn) {
-            var err = objs[id]? null: 'error';
+            var err = typeof objs[id] !== 'undefined' ? null: 'error';
             delete objs[id];
             fn(err);
         }
-    }
+    };
 };
 

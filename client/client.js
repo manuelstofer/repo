@@ -12,7 +12,7 @@ module.exports = function (options) {
             return function (notification) {
                 var subFn;
                 subscriptions[notification.id] = (subscriptions[notification.id] || 0) + 1;
-                if (fn ) {
+                if (fn) {
                     subFn = fn(notification);
                     if (notification.action !== 'error' && typeof subFn === 'function') {
                         return em.on(notification.id, subFn);

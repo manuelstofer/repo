@@ -9,12 +9,10 @@ module.exports = function storage (options) {
 
     io.sockets.on('connection', function (socket) {
 
-        var subscribe = function (id, fn) {
-                if (fn) {
-                    subscriptions[id] = subscriptions[id] || [];
-                    subscriptions[id].push(socket);
-                    subscriptions[id] = _.uniq(subscriptions[id]);
-                }
+        var subscribe = function (id) {
+                subscriptions[id] = subscriptions[id] || [];
+                subscriptions[id].push(socket);
+                subscriptions[id] = _.uniq(subscriptions[id]);
             },
 
             notify = function (obj) {
@@ -33,7 +31,7 @@ module.exports = function storage (options) {
                 };
                 if (fn) { fn(notification); }
                 notify(notification);
-                subscribe(obj.id, fn);
+                subscribe(obj.id);
             });
         });
 
@@ -53,23 +51,19 @@ module.exports = function storage (options) {
 
 
         socket.on('del', function (id, fn) {
-            console.log('del: ', id);
             backend.del(id, function (err) {
-                console.log('callback called');
                 var notification = {
                     action: err? 'error': 'del',
                     id: id
                 };
-                console.log('notification', notification);
+
+                notify(notification);
+                delete subscriptions[id];
                 if (fn) {
                     fn(notification);
                 }
-                notify(notification);
-                delete subscriptions[id];
             });
         });
-
-
 
         socket.on('unsub', function (id) {
             subscriptions[id] = _.without(subscriptions[id], socket);
