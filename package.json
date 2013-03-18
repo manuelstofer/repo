@@ -1,7 +1,7 @@
 {
-    "name": "storage",
+    "name": "repo",
     "version": "0.0.1",
-    "description": "",
+    "description": "Experimental real-time storage api",
     "keywords": [],
     "author": "Manuel Stofer <manuel@takimata.ch>",
     "dependencies": {

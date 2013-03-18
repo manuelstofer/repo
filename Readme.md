@@ -1,3 +1,3 @@
-# Storage
+# Repo
 
-Experimental realtime storage API
+Experimental real-time storage API

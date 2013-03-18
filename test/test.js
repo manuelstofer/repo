@@ -3,7 +3,7 @@
 describe('client', function () {
     'use strict';
 
-    var storage = require('storage'),
+    var storage = require('repo'),
         mock = storage.mock({data: {}}),
         client = storage.client({socket: io.connect('http://localhost:2014')});
 
