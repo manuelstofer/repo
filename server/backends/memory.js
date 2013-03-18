@@ -4,10 +4,15 @@ module.exports = function (options) {
     var objs = {},
         id = 0;
 
+    function autoInc () {
+       while(typeof objs[++id] !== 'undefined');
+       return id;
+    }
+
     return {
         put: function (obj, fn) {
             if (!obj.id) {
-                obj.id = ++id;
+                obj.id = autoInc();
             }
             objs[obj.id] = obj;
             fn(null, obj);
