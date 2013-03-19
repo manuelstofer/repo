@@ -7,89 +7,117 @@ describe('client', function () {
         mock = storage.mock({data: {}}),
         client = storage.client({socket: io.connect('http://localhost:2014')});
 
-    ([mock, client]).forEach(function (client, index) {
-        describe('create object: ' + index, function () {
+    describeInterface('mock', mock);
+    describeInterface('client', client);
 
-            it('should get a "create" notification', function (done) {
-                client.put({example: 'expected'}, function (notification) {
-                    notification.action.should.equal('create');
-                    notification.data.example.should.equal('expected');
-                    notification.id.should.not.be.undefined;
-                    done();
-                });
-            });
+    function describeInterface(name, client) {
+        describe(name, function () {
+            describe('create object', function () {
 
-            it('should get "change" on the returned callback', function (done) {
-
-                client.put({example: 'expected'}, function (notification) {
-                    var obj = notification.data;
-                    obj.example = 'changed';
-
-                    client.put(obj);
-
-                    return function (notification) {
-                        notification.action.should.equal('change');
-                        notification.data.example.should.equal('changed');
-                        notification.id.should.not.be.undefined;
-                        done();
-                    };
-                });
-            });
-
-            it('should get "del" on the returned callback', function (done) {
-
-                client.put({example: 'expected'}, function (notification) {
-                    var obj = notification.data;
-
-                    client.del(obj.id);
-                    return function (notification) {
-                        notification.action.should.equal('del');
-                        notification.id.should.equal(obj.id);
-                        done();
-                    };
-                });
-            });
-        });
-
-        describe('change object: ' + index, function () {
-
-            it('should get a "change" notification', function (done) {
-                client.put({example: 'expected'}, function (notification) {
-                    var obj = notification.data;
-                    obj.example = 'changed';
-                    client.put(obj, function (notification) {
-                        notification.action.should.equal('change');
-                        notification.data.example.should.equal('changed');
+                it('should get a "create" notification', function (done) {
+                    client.put({example: 'expected'}, function (notification) {
+                        notification.action.should.equal('create');
+                        notification.data.example.should.equal('expected');
                         notification.id.should.not.be.undefined;
                         done();
                     });
                 });
+
+                it('should get "change" on the returned callback', function (done) {
+
+                    client.put({example: 'expected'}, function (notification) {
+                        var obj = notification.data;
+                        obj.example = 'changed';
+
+                        client.put(obj);
+
+                        return function (notification) {
+                            notification.action.should.equal('change');
+                            notification.data.example.should.equal('changed');
+                            notification.id.should.not.be.undefined;
+                            done();
+                        };
+                    });
+                });
+
+                it('should get "del" on the returned callback', function (done) {
+
+                    client.put({example: 'expected'}, function (notification) {
+                        var obj = notification.data;
+
+                        client.del(obj.id);
+                        return function (notification) {
+                            notification.action.should.equal('del');
+                            notification.id.should.equal(obj.id);
+                            done();
+                        };
+                    });
+                });
             });
-        });
 
-        describe('get object: ' + index, function () {
+            describe('change object', function () {
 
-            it('should get "error" notification getting a non existent object', function (done) {
+                it('should get a "change" notification', function (done) {
+                    client.put({example: 'expected'}, function (notification) {
+                        var obj = notification.data;
+                        obj.example = 'changed';
+                        client.put(obj, function (notification) {
+                            notification.action.should.equal('change');
+                            notification.data.example.should.equal('changed');
+                            notification.id.should.not.be.undefined;
+                            done();
+                        });
+                    });
+                });
+            });
 
-                client.get('non-existent', function (notification) {
-                    notification.action.should.equal('error');
-                    notification.id.should.equal('non-existent');
-                    done();
+            describe('get object', function () {
+
+                it('should get "error" notification getting a non existent object', function (done) {
+
+                    client.get('non-existent', function (notification) {
+                        notification.action.should.equal('error');
+                        notification.id.should.equal('non-existent');
+                        done();
+                    });
+                });
+            });
+
+            describe('delete object', function () {
+
+                it('should get "error" notification deleting a non existent object', function (done) {
+                    client.del('non-existent', function (notification) {
+                        notification.action.should.equal('error');
+                        notification.id.should.equal('non-existent');
+                        done();
+                    });
+                });
+            });
+
+            describe('query', function () {
+                it('should return correct results', function (done) {
+                    var obj1 = {tag: 'hello'},
+                        obj2 = {tag: 'hello'},
+                        obj3 = {tag: 'bla'};
+
+                    client.put(obj1, function () {
+                        client.put(obj2, function () {
+                            client.put(obj3, function () {
+
+
+                                client.query({tag: 'hello'}, function (notification) {
+
+                                });
+
+                            });
+                        });
+                    });
+
+
                 });
             });
         });
-
-        describe('delete object: ' + index, function () {
-
-            it('should get "error" notification deleting a non existent object', function (done) {
-                client.del('non-existent', function (notification) {
-                    notification.action.should.equal('error');
-                    notification.id.should.equal('non-existent');
-                    done();
-                });
-            });
-        });
-    });
+    }
 
 
 });
