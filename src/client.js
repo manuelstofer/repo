@@ -1,6 +1,7 @@
 'use strict';
 var emitter = require('emitter'),
-    each    = require('foreach');
+    each    = require('foreach'),
+    map     = require('mapr').map;
 
 module.exports = function (options) {
 
@@ -36,27 +37,27 @@ module.exports = function (options) {
             }
         },
 
-        api = {
+        api = map({
 
-            get: doAsync(function (_id, fn) {
+            get: function (_id, fn) {
                 socket.emit('get', _id, createCallback(_id, fn));
-            }),
+            },
 
-            put: doAsync(function (obj, fn) {
+            put: function (obj, fn) {
                 socket.emit('put', obj, createCallback(obj._id, fn));
-            }),
+            },
 
-            del: doAsync(function (_id, fn) {
+            del: function (_id, fn) {
                 socket.emit('del', _id, fn);
-            }),
+            },
 
-            unsub: doAsync(function (_id, fn) {
+            unsub: function (_id, fn) {
                 if (fn) { em.off(_id, fn); }
                 if (--subscriptionCount[_id] === 0) {
                     socket.emit('unsub', _id);
                 }
-            })
-        };
+            }
+        }, doAsync);
 
     socket.on('notify', function (_id, obj) {
         em.emit(_id, obj);

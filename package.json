@@ -6,6 +6,7 @@
     "author": "Manuel Stofer <manuel@takimata.ch>",
     "dependencies": {
         "foreach": "*",
+        "mapr": "*",
         "underscore": "*",
         "express": "*",
         "socket.io": "*"
