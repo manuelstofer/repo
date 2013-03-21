@@ -5,6 +5,7 @@
     "keywords": [],
     "author": "Manuel Stofer <manuel@takimata.ch>",
     "dependencies": {
+        "foreach": "*",
         "underscore": "*",
         "express": "*",
         "socket.io": "*"

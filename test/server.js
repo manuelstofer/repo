@@ -6,11 +6,10 @@ var express     = require('express'),
     server      = http.createServer(app),
     io          = require('socket.io').listen(server),
     storage     = require('../src/storage'),
-    backend     = require('./memory');
+    backend     = require('../src/backends/memory');
 
 io.set('log level', 1);
 var storageApi = storage({
-    io: io,
     backend: backend()
 });
 

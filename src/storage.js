@@ -1,5 +1,6 @@
 'use strict';
-var _ = require('underscore');
+var _ = require('underscore'),
+    each = require('foreach');
 
 module.exports = function storage (options) {
 
@@ -25,7 +26,7 @@ module.exports = function storage (options) {
             },
 
             notify = function (_id, notification) {
-                _.each(subscriptions[_id] || [], function (socket) {
+                each(subscriptions[_id] || [], function (socket) {
                     socket.emit('notify', _id, notification);
                 });
             };

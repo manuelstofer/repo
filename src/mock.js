@@ -1,5 +1,7 @@
 'use strict';
 
+var each = require('foreach');
+
 module.exports =  function (options) {
 
     var autoInc = 0,
@@ -19,7 +21,7 @@ module.exports =  function (options) {
     var notify = function (_id, notification) {
         var callbacks = callbackFns[_id];
         if (callbacks) {
-            callbacks.forEach(function (callback) {
+            each(callbacks, function (callback) {
                 callback(notification);
             });
         }

@@ -1,4 +1,5 @@
 module.exports = {
-    client: require('./src/client'),
-    mock:   require('./src/mock')
+    mock:   require('./src/mock'),
+    cmock:   require('./src/cmock'),
+    client: require('./src/client')
 };

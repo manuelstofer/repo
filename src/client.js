@@ -1,6 +1,6 @@
 'use strict';
 var emitter = require('emitter'),
-    each    = require('each');
+    each    = require('foreach');
 
 module.exports = function (options) {
 
@@ -18,33 +18,44 @@ module.exports = function (options) {
                 if (fn) {
                     subFn = fn(notification);
                     if (notification.action !== 'error' && typeof subFn === 'function') {
-                        return em.on(_id, subFn);
+
+                        em.on(_id, subFn);
+                        return;
                     }
                 }
                 api.unsub(_id);
             };
         },
 
+        doAsync = function (fn) {
+            return function () {
+                var args = arguments;
+                return setTimeout(function () {
+                    fn.apply(null, args);
+                }, 0);
+            }
+        },
+
         api = {
 
-            get: function (_id, fn) {
+            get: doAsync(function (_id, fn) {
                 socket.emit('get', _id, createCallback(_id, fn));
-            },
+            }),
 
-            put: function (obj, fn) {
+            put: doAsync(function (obj, fn) {
                 socket.emit('put', obj, createCallback(obj._id, fn));
-            },
+            }),
 
-            del: function (_id, fn) {
+            del: doAsync(function (_id, fn) {
                 socket.emit('del', _id, fn);
-            },
+            }),
 
-            unsub: function (_id, fn) {
+            unsub: doAsync(function (_id, fn) {
                 if (fn) { em.off(_id, fn); }
                 if (--subscriptionCount[_id] === 0) {
                     socket.emit('unsub', _id);
                 }
-            }
+            })
         };
 
     socket.on('notify', function (_id, obj) {

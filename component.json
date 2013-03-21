@@ -4,12 +4,16 @@
   "description": "",
   "keywords": [],
   "dependencies": {
-    "manuelstofer/each": "*",
-    "component/emitter": "*"
+    "manuelstofer/foreach": "*",
+    "component/emitter": "*",
+    "component/underscore": "*"
   },
   "scripts": [
     "index.js",
     "src/client.js",
-    "src/mock.js"
+    "src/mock.js",
+    "src/cmock.js",
+    "src/storage.js",
+    "src/backends/memory.js"
   ]
 }
