@@ -38,8 +38,6 @@ function describeInterface(name, client) {
                 });
             });
 
-
-
             it('should get "del" on the returned callback', function (done) {
 
                 client.put({example: 'expected'}, function (notification) {
@@ -96,11 +94,12 @@ function describeInterface(name, client) {
                 var obj1 = {tag: 'hello'},
                     obj2 = {tag: 'hello'},
                     obj3 = {tag: 'bla'};
+
                 createData([obj1, obj2, obj3], function (objs) {
 
                     client.query({tag: 'hello'}, function (notification) {
 
-                        notification.action.should.equal('query');
+                        notification.action.should.equal('query-result');
                         notification.data.length.should.equal(2);
                         notification.data[0].tag.should.equal('hello');
                         notification.data[1].tag.should.equal('hello');
@@ -127,7 +126,6 @@ function describeInterface(name, client) {
     }
 
     function removeData(objs, fn) {
-        console.log(objs);
         var n = objs.length;
         objs.forEach(function (obj) {
             client.del(obj._id, function () {

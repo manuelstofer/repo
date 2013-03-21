@@ -75,7 +75,7 @@ module.exports = function storage (options) {
         socket.on('query', function (query, fn) {
             backend.query(query, function (err, obj) {
                 var notification = {
-                    action: err? 'error': 'query',
+                    action: err? 'error': 'query-result',
                     data: obj
                 };
                 if (fn) {
