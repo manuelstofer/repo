@@ -1,52 +1,54 @@
 'use strict';
-var emitter = require('emitter');
+var emitter = require('emitter'),
+    each    = require('each');
 
 module.exports = function (options) {
 
     var em = emitter({}),
         socket = options.socket,
 
-        subscriptions = {},
+        // tracks the number of subscriptions by object _id
+        subscriptionCount = {},
 
-        createCallback = function (fn) {
+        createCallback = function (_id, fn) {
             return function (notification) {
                 var subFn;
-                subscriptions[notification.id] = (subscriptions[notification.id] || 0) + 1;
+                _id = _id || notification.data._id;
+                subscriptionCount[_id] = (subscriptionCount[_id] || 0) + 1;
                 if (fn) {
                     subFn = fn(notification);
                     if (notification.action !== 'error' && typeof subFn === 'function') {
-                        return em.on(notification.id, subFn);
+                        return em.on(_id, subFn);
                     }
                 }
-                api.unsub(notification.id);
+                api.unsub(_id);
             };
         },
 
         api = {
 
-            get: function (obj, fn) {
-                socket.emit('get', obj, createCallback(fn));
+            get: function (_id, fn) {
+                socket.emit('get', _id, createCallback(_id, fn));
             },
 
-            put: function (id, fn) {
-                socket.emit('put', id, createCallback(fn));
+            put: function (obj, fn) {
+                socket.emit('put', obj, createCallback(obj._id, fn));
             },
 
-            del: function (id, fn) {
-                socket.emit('del', id, fn);
+            del: function (_id, fn) {
+                socket.emit('del', _id, fn);
             },
 
-            unsub: function (id, fn) {
-                if(fn) { em.off(id, fn); }
-                subscriptions[id]--;
-                if (subscriptions[id] === 0) {
-                    socket.emit('unsub', id);
+            unsub: function (_id, fn) {
+                if (fn) { em.off(_id, fn); }
+                if (--subscriptionCount[_id] === 0) {
+                    socket.emit('unsub', _id);
                 }
             }
         };
 
-    socket.on('notify', function (obj) {
-        em.emit(obj.id, obj);
+    socket.on('notify', function (_id, obj) {
+        em.emit(_id, obj);
     });
 
     return api;

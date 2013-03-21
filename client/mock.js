@@ -6,19 +6,18 @@ module.exports =  function (options) {
         callbackFns = {},
         data = options.data;
 
-    var addCallback = function (id, callback) {
+    var addCallback = function (_id, callback) {
         if (callback) {
-            if (typeof callbackFns[id] === 'undefined') {
-                callbackFns[id] = [];
+            if (typeof callbackFns[_id] === 'undefined') {
+                callbackFns[_id] = [];
             }
-            callbackFns[id] = [];
-            callbackFns[id].push(callback);
+            callbackFns[_id] = [];
+            callbackFns[_id].push(callback);
         }
     };
 
-    var notify = function (notification) {
-        var id = notification.id;
-        var callbacks = callbackFns[id];
+    var notify = function (_id, notification) {
+        var callbacks = callbackFns[_id];
         if (callbacks) {
             callbacks.forEach(function (callback) {
                 callback(notification);
@@ -27,49 +26,49 @@ module.exports =  function (options) {
     };
 
     return {
-        get: function (id, fn) {
+        get: function (_id, fn) {
             setTimeout(function () {
-                var action = typeof data[id] !== 'undefined' ? 'change' : 'error';
+                var action = typeof data[_id] !== 'undefined' ? 'change' : 'error';
                 var callback = fn({
-                    id:     id,
+                    id:     _id,
                     action: action,
-                    data:   data[id]
+                    data:   data[_id]
                 });
-                addCallback(id, callback);
+                addCallback(_id, callback);
             });
         },
 
         put: function (obj, fn) {
             setTimeout(function () {
-                var action = typeof obj.id !== 'undefined' ? 'change': 'create',
+                var action = typeof obj._id !== 'undefined' ? 'change': 'create',
                     callback;
-                obj.id = obj.id || ++autoInc;
-                data[obj.id] = obj;
+                obj._id = obj._id || ++autoInc;
+                data[obj._id] = obj;
                 if (fn) {
                     callback = fn({
-                        id: obj.id,
                         action: action,
                         data: obj
                     });
                 }
-                notify({action: 'change', id: obj.id, data: obj});
-                addCallback(obj.id, callback);
+                notify(obj._id, {action: 'change', data: obj});
+                if (callback) {
+                    addCallback(obj._id, callback);
+                }
             }, 0);
         },
 
-        del: function (id, fn) {
+        del: function (_id, fn) {
             setTimeout(function () {
-                var action = typeof data[id] !== 'undefined' ? 'del': 'error';
-                delete data[id];
+                var action = typeof data[_id] !== 'undefined' ? 'del': 'error';
+                delete data[_id];
                 var notification = {
-                    action: action,
-                    id: id
+                    action: action
                 };
 
                 if (fn) {
                     fn(notification);
                 }
-                notify(notification);
+                notify(_id, notification);
             });
         }
     };

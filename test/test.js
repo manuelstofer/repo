@@ -18,7 +18,7 @@ describe('client', function () {
                     client.put({example: 'expected'}, function (notification) {
                         notification.action.should.equal('create');
                         notification.data.example.should.equal('expected');
-                        notification.id.should.not.be.undefined;
+                        notification.data._id.should.not.be.undefined;
                         done();
                     });
                 });
@@ -34,21 +34,21 @@ describe('client', function () {
                         return function (notification) {
                             notification.action.should.equal('change');
                             notification.data.example.should.equal('changed');
-                            notification.id.should.not.be.undefined;
                             done();
                         };
                     });
                 });
+
+
 
                 it('should get "del" on the returned callback', function (done) {
 
                     client.put({example: 'expected'}, function (notification) {
                         var obj = notification.data;
 
-                        client.del(obj.id);
+                        client.del(obj._id);
                         return function (notification) {
                             notification.action.should.equal('del');
-                            notification.id.should.equal(obj.id);
                             done();
                         };
                     });
@@ -64,7 +64,7 @@ describe('client', function () {
                         client.put(obj, function (notification) {
                             notification.action.should.equal('change');
                             notification.data.example.should.equal('changed');
-                            notification.id.should.not.be.undefined;
+                            notification.data._id.should.not.be.undefined;
                             done();
                         });
                     });
@@ -77,7 +77,6 @@ describe('client', function () {
 
                     client.get('non-existent', function (notification) {
                         notification.action.should.equal('error');
-                        notification.id.should.equal('non-existent');
                         done();
                     });
                 });
@@ -88,34 +87,11 @@ describe('client', function () {
                 it('should get "error" notification deleting a non existent object', function (done) {
                     client.del('non-existent', function (notification) {
                         notification.action.should.equal('error');
-                        notification.id.should.equal('non-existent');
                         done();
                     });
                 });
             });
 
-            describe('query', function () {
-                it('should return correct results', function (done) {
-                    var obj1 = {tag: 'hello'},
-                        obj2 = {tag: 'hello'},
-                        obj3 = {tag: 'bla'};
-
-                    client.put(obj1, function () {
-                        client.put(obj2, function () {
-                            client.put(obj3, function () {
-
-
-                                client.query({tag: 'hello'}, function (notification) {
-
-                                });
-
-                            });
-                        });
-                    });
-
-
-                });
-            });
         });
     }
 

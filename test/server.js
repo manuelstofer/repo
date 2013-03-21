@@ -8,6 +8,7 @@ var express     = require('express'),
     storage     = require('../server/storage'),
     backend     = require('../server/backends/memory');
 
+io.set('log level', 1);
 storage({
     io: io,
     backend: backend()

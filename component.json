@@ -4,6 +4,7 @@
   "description": "",
   "keywords": [],
   "dependencies": {
+    "manuelstofer/each": "*",
     "component/emitter": "*"
   },
   "scripts": [
