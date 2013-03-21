@@ -4,6 +4,7 @@
   "description": "",
   "keywords": [],
   "dependencies": {
+    "enyo/md5": "*",
     "manuelstofer/mapr": "*",
     "manuelstofer/foreach": "*",
     "manuelstofer/qry": "*",
@@ -15,6 +16,7 @@
     "src/client.js",
     "src/mock.js",
     "src/storage.js",
+    "src/query-id.js",
     "src/backends/memory.js"
   ]
 }

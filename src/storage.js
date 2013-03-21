@@ -1,6 +1,7 @@
 'use strict';
-var _ = require('underscore'),
-    each = require('foreach');
+var _           = require('underscore'),
+    each        = require('foreach'),
+    getQueryId  = require('./query-id');
 
 module.exports = function storage (options) {
 
@@ -19,16 +20,30 @@ module.exports = function storage (options) {
 
     function addClient (socket) {
 
-        var subscribe = function (_id) {
+        var objectSubscriptions = {},
+
+            subscribe = function (_id) {
+                objectSubscriptions[_id] = (objectSubscriptions[_id] || 0) + 1;
                 subscriptions[_id] = subscriptions[_id] || [];
                 subscriptions[_id].push(socket);
                 subscriptions[_id] = _.uniq(subscriptions[_id]);
+            },
+
+            subscribeQuery = function (query) {
+                var queryId = getQueryId(query);
+                querySubscriptions[queryId] = querySubscriptions[queryId] || [];
+                querySubscriptions[queryId].push(socket);
+                querySubscriptions[queryId] = _.uniq(querySubscriptions[queryId]);
             },
 
             notify = function (_id, notification) {
                 each(subscriptions[_id] || [], function (socket) {
                     socket.emit('notify', _id, notification);
                 });
+            },
+
+            notifyQueries = function () {
+
             };
 
         socket.on('put', function (obj, fn) {
@@ -63,9 +78,7 @@ module.exports = function storage (options) {
                 var notification = {
                     action: err? 'error': 'del'
                 };
-
                 notify(_id, notification);
-                delete subscriptions[_id];
                 if (fn) {
                     fn(notification);
                 }
@@ -73,11 +86,13 @@ module.exports = function storage (options) {
         });
 
         socket.on('query', function (query, fn) {
-            backend.query(query, function (err, obj) {
+            backend.query(query, function (err, objs) {
                 var notification = {
                     action: err? 'error': 'query-result',
-                    data: obj
+                    data: objs
                 };
+                each(_.pluck(objs, '_id'), subscribe);
+                subscribeQuery(query);
                 if (fn) {
                     fn(notification);
                 }
@@ -85,7 +100,10 @@ module.exports = function storage (options) {
         });
 
         socket.on('unsub', function (_id) {
-            subscriptions[_id] = _.without(subscriptions[_id], socket);
+            if (--objectSubscriptions[_id] == 0) {
+                subscriptions[_id] = _.without(subscriptions[_id], socket);
+                delete subscriptions[_id];
+            }
         });
     }
 };

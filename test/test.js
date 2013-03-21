@@ -11,6 +11,7 @@ describeInterface('client', client);
 
 function describeInterface(name, client) {
     describe(name, function () {
+
         describe('create object', function () {
 
             it('should get a "create" notification', function (done) {
@@ -33,6 +34,7 @@ function describeInterface(name, client) {
                     return function (notification) {
                         notification.action.should.equal('change');
                         notification.data.example.should.equal('changed');
+                        client.unsub(obj._id);
                         done();
                     };
                 });
@@ -46,6 +48,7 @@ function describeInterface(name, client) {
                     client.del(obj._id);
                     return function (notification) {
                         notification.action.should.equal('del');
+                        client.unsub(obj._id);
                         done();
                     };
                 });
@@ -105,6 +108,25 @@ function describeInterface(name, client) {
                         notification.data[1].tag.should.equal('hello');
 
                         removeData(objs, done);
+                    });
+                });
+            });
+
+            it('should receive delete notifications for query results', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function () {
+
+                    client.query({tag: 'hello'}, function (notification) {
+                        var obj = notification.data[0];
+                        client.del(obj._id);
+                        return [
+                            function (notification) {
+                                client.unsub(obj._id);
+                                notification.action.should.equal('del');
+                                done();
+                            }
+                        ];
                     });
                 });
             });

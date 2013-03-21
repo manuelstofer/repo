@@ -8,20 +8,18 @@ module.exports = function (options) {
     var em = emitter({}),
         socket = options.socket,
 
-        // tracks the number of subscriptions by object _id
-        subscriptionCount = {},
+        addObjectNotificationCallBack = function (_id, subFn) {
+            em.on(_id, subFn);
+        },
 
-        createCallback = function (_id, fn) {
+        createObjectCallback = function (_id, fn) {
             return function (notification) {
                 var subFn;
                 _id = _id || notification.data._id;
-                subscriptionCount[_id] = (subscriptionCount[_id] || 0) + 1;
                 if (fn) {
                     subFn = fn(notification);
                     if (notification.action !== 'error' && typeof subFn === 'function') {
-
-                        em.on(_id, subFn);
-                        return;
+                        addObjectNotificationCallBack(_id, subFn);
                     }
                 }
                 api.unsub(_id);
@@ -40,11 +38,11 @@ module.exports = function (options) {
         api = map({
 
             get: function (_id, fn) {
-                socket.emit('get', _id, createCallback(_id, fn));
+                socket.emit('get', _id, createObjectCallback(_id, fn));
             },
 
             put: function (obj, fn) {
-                socket.emit('put', obj, createCallback(obj._id, fn));
+                socket.emit('put', obj, createObjectCallback(obj._id, fn));
             },
 
             del: function (_id, fn) {
@@ -52,14 +50,26 @@ module.exports = function (options) {
             },
 
             query: function (query, fn) {
-                socket.emit('query', query, fn);
+                socket.emit('query', query, function (notification) {
+                    var objs = notification.data,
+                        notificationFns = fn(notification);
+
+                    each(notificationFns, function (fn, index) {
+                        var _id = objs[index]._id;
+                        addObjectNotificationCallBack(_id, fn);
+                    });
+
+                    each(objs, function (obj, index) {
+                        if (!notificationFns || !notificationFns[index]) {
+                            api.unsub(obj._id);
+                        }
+                    });
+                });
             },
 
             unsub: function (_id, fn) {
                 if (fn) { em.off(_id, fn); }
-                if (--subscriptionCount[_id] === 0) {
-                    socket.emit('unsub', _id);
-                }
+                socket.emit('unsub', _id);
             }
         }, doAsync);
 
