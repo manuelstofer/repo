@@ -1,5 +1,7 @@
 'use strict';
 
+var qry = require('qry');
+
 module.exports = function (options) {
     var objs = {},
         autoIncId = 0;
@@ -28,7 +30,21 @@ module.exports = function (options) {
             var err = typeof objs[_id] !== 'undefined' ? null: 'error';
             delete objs[_id];
             fn(err);
+        },
+
+        query: function (query, fn) {
+            var match = qry(query);
+            fn(null, values(objs).filter(match));
         }
     };
 };
 
+function values (obj) {
+    var vals = [];
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            vals.push(obj[key]);
+        }
+    }
+    return vals;
+}

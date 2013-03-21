@@ -7,6 +7,7 @@
     "dependencies": {
         "foreach": "*",
         "mapr": "*",
+        "qry": "*",
         "underscore": "*",
         "express": "*",
         "socket.io": "*"

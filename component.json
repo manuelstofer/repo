@@ -6,6 +6,7 @@
   "dependencies": {
     "manuelstofer/mapr": "*",
     "manuelstofer/foreach": "*",
+    "manuelstofer/qry": "*",
     "component/emitter": "*",
     "component/underscore": "*"
   },

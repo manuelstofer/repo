@@ -51,6 +51,10 @@ module.exports = function (options) {
                 socket.emit('del', _id, fn);
             },
 
+            query: function (query, fn) {
+                socket.emit('query', query, fn);
+            },
+
             unsub: function (_id, fn) {
                 if (fn) { em.off(_id, fn); }
                 if (--subscriptionCount[_id] === 0) {

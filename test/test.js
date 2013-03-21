@@ -95,5 +95,34 @@ describe('client', function () {
         });
     }
 
+    describe('query', function () {
+        it('should return correct results', function (done) {
+            var obj1 = {tag: 'hello'},
+                obj2 = {tag: 'hello'},
+                obj3 = {tag: 'bla'};
+
+            client.put(obj1, function () {
+                client.put(obj2, function () {
+                    client.put(obj3, function () {
+                        client.query({tag: 'hello'}, function (notification) {
+
+                            notification.action.should.equal('query');
+                            notification.data.length.should.equal(2);
+                            notification.data[0].tag.should.equal('hello');
+                            notification.data[1].tag.should.equal('hello');
+
+                            client.del(obj1, function () {
+                                client.del(obj2, function () {
+                                    client.del(obj3, function () {
+                                        done();
+                                    });
+                                });
+                            })
+                        });
+                    });
+                });
+            });
+        });
+    });
 
 });

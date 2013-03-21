@@ -72,6 +72,18 @@ module.exports = function storage (options) {
             });
         });
 
+        socket.on('query', function (query, fn) {
+            backend.query(query, function (err, obj) {
+                var notification = {
+                    action: err? 'error': 'query',
+                    data: obj
+                };
+                if (fn) {
+                    fn(notification);
+                }
+            });
+        });
+
         socket.on('unsub', function (_id) {
             subscriptions[_id] = _.without(subscriptions[_id], socket);
         });
