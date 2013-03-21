@@ -9,7 +9,7 @@
   },
   "scripts": [
     "index.js",
-    "client/client.js",
-    "client/mock.js"
+    "src/client.js",
+    "src/mock.js"
   ]
 }

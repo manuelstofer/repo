@@ -12,8 +12,11 @@ module.exports = function storage (options) {
         // sockets subscribed to a query
         querySubscriptions = {};
 
+    return {
+        addClient: addClient
+    };
 
-    io.sockets.on('connection', function (socket) {
+    function addClient (socket) {
 
         var subscribe = function (_id) {
                 subscriptions[_id] = subscriptions[_id] || [];
@@ -22,9 +25,7 @@ module.exports = function storage (options) {
             },
 
             notify = function (_id, notification) {
-                console.log(notification);
                 _.each(subscriptions[_id] || [], function (socket) {
-                    console.log('notify', notification);
                     socket.emit('notify', _id, notification);
                 });
             };
@@ -73,6 +74,5 @@ module.exports = function storage (options) {
         socket.on('unsub', function (_id) {
             subscriptions[_id] = _.without(subscriptions[_id], socket);
         });
-    });
+    }
 };
-

@@ -1,5 +1,5 @@
 
-module.exports = require('./server/storage');
+module.exports = require('./src/storage');
 module.exports.backends = {
-    memory: require('./server/backends/memory')
+    memory: require('./src/backends/memory')
 };

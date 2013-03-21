@@ -5,14 +5,16 @@ var express     = require('express'),
     http        = require('http'),
     server      = http.createServer(app),
     io          = require('socket.io').listen(server),
-    storage     = require('../server/storage'),
-    backend     = require('../server/backends/memory');
+    storage     = require('../src/storage'),
+    backend     = require('./memory');
 
 io.set('log level', 1);
-storage({
+var storageApi = storage({
     io: io,
     backend: backend()
 });
+
+io.sockets.on('connection', storageApi.addClient);
 
 app.configure(function () {
     app.use(express.logger('dev'));
