@@ -4,12 +4,10 @@ describe('client', function () {
     'use strict';
 
     var storage = require('repo'),
-        mock = storage.mock({data: {}}),
-        cmock = storage.cmock(),
+        mock = storage.mock(),
         client = storage.client({socket: io.connect('http://localhost:2014')});
 
     describeInterface('mock', mock);
-    describeInterface('cmock', cmock);
     describeInterface('client', client);
 
     function describeInterface(name, client) {

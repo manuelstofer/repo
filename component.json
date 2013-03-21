@@ -13,7 +13,6 @@
     "index.js",
     "src/client.js",
     "src/mock.js",
-    "src/cmock.js",
     "src/storage.js",
     "src/backends/memory.js"
   ]
