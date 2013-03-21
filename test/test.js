@@ -130,6 +130,26 @@ function describeInterface(name, client) {
                     });
                 });
             });
+
+            it('should receive change notifications for query results', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+
+                    client.query({tag: 'hello'}, function (notification) {
+                        var obj = notification.data[0];
+                        obj.example = 'hello';
+                        client.put(obj);
+                        return [
+                            function (notification) {
+                                client.unsub(obj._id);
+                                notification.action.should.equal('change');
+                                removeData(objs, done);
+                            }
+                        ];
+                    });
+                });
+            });
         });
 
     });

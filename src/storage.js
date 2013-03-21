@@ -9,7 +9,7 @@ module.exports = function storage (options) {
         io              = options.io,
 
         // sockets subscribed to an object
-        subscriptions   = {},
+        objectSubscriptions   = {},
 
         // sockets subscribed to a query
         querySubscriptions = {};
@@ -20,13 +20,14 @@ module.exports = function storage (options) {
 
     function addClient (socket) {
 
-        var objectSubscriptions = {},
+        var objectSubscriptionCount = {},
+            querySubscriptionCount = {},
 
             subscribe = function (_id) {
-                objectSubscriptions[_id] = (objectSubscriptions[_id] || 0) + 1;
-                subscriptions[_id] = subscriptions[_id] || [];
-                subscriptions[_id].push(socket);
-                subscriptions[_id] = _.uniq(subscriptions[_id]);
+                objectSubscriptionCount[_id] = (objectSubscriptionCount[_id] || 0) + 1;
+                objectSubscriptions[_id] = objectSubscriptions[_id] || [];
+                objectSubscriptions[_id].push(socket);
+                objectSubscriptions[_id] = _.uniq(objectSubscriptions[_id]);
             },
 
             subscribeQuery = function (query) {
@@ -37,7 +38,7 @@ module.exports = function storage (options) {
             },
 
             notify = function (_id, notification) {
-                each(subscriptions[_id] || [], function (socket) {
+                each(objectSubscriptions[_id] || [], function (socket) {
                     socket.emit('notify', _id, notification);
                 });
             },
@@ -100,9 +101,9 @@ module.exports = function storage (options) {
         });
 
         socket.on('unsub', function (_id) {
-            if (--objectSubscriptions[_id] == 0) {
-                subscriptions[_id] = _.without(subscriptions[_id], socket);
-                delete subscriptions[_id];
+            if (--objectSubscriptionCount[_id] == 0) {
+                objectSubscriptions[_id] = _.without(objectSubscriptions[_id], socket);
+                delete objectSubscriptions[_id];
             }
         });
     }
