@@ -25,7 +25,7 @@ function describeInterface(name, client) {
 
             it('should get "change" on the returned callback', function (done) {
 
-                client.put({example: 'expected'}, function (notification) {
+                client.put({example: 'expected'}, function (notification, unsub) {
                     var obj = notification.data;
                     obj.example = 'changed';
 
@@ -34,7 +34,7 @@ function describeInterface(name, client) {
                     return function (notification) {
                         notification.event.should.equal('change');
                         notification.data.example.should.equal('changed');
-                        client.unsub(obj._id);
+                        unsub();
                         done();
                     };
                 });
@@ -42,7 +42,7 @@ function describeInterface(name, client) {
 
             it('should get "del" on the returned callback', function (done) {
 
-                client.put({example: 'expected'}, function (notification) {
+                client.put({example: 'expected'}, function (notification, unsub) {
                     var obj = notification.data;
 
                     client.del(obj._id);
@@ -126,7 +126,6 @@ function describeInterface(name, client) {
                             notification.event.should.equal('del');
                             done();
                         }
-
                     });
                 });
             });
@@ -152,7 +151,7 @@ function describeInterface(name, client) {
                 });
             });
 
-            it('should receive notification when new object matches query', function (done) {
+            it('should receive `match` notification when new object matches the query', function (done) {
                 var obj1 = {tag: 'hello'};
 
                 createData([obj1], function (objs) {
@@ -176,7 +175,7 @@ function describeInterface(name, client) {
                 });
             });
 
-            it('should receive notification when an object does not match anymore', function (done) {
+            it('should receive `unmatch` notification when an object does not match the query anymore', function (done) {
                 var obj1 = {tag: 'hello'};
 
                 createData([obj1], function (objs) {
@@ -198,7 +197,7 @@ function describeInterface(name, client) {
                 });
             });
 
-            it('should receive change notifications for new objects matching a query', function (done) {
+            it('should receive `change` notifications for new objects matching a query', function (done) {
                 var obj1 = {tag: 'hello'};
 
                 createData([obj1], function (objs) {
@@ -265,7 +264,7 @@ function describeInterface(name, client) {
                     var query = {tag: 'hello'};
 
                     client.query(query, function (notification, unsub) {
-                        var change = notification.data;
+                        var change = notification.data[0];
 
                         change.tag = 'no-match';
 
@@ -279,7 +278,7 @@ function describeInterface(name, client) {
                         return {
                             query: function () {},
                             object: function () {
-                                true.should.equal.false();
+                                true.should.equal.false;
                             }
                         };
                     });

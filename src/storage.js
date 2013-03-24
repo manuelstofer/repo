@@ -27,6 +27,7 @@ module.exports = function storage (options) {
          */
         queries         = {};
 
+
     return {
 
         /**
@@ -88,13 +89,35 @@ module.exports = function storage (options) {
                 /**
                  * Subscribe to a id
                  *
-                 * @param _id (Object | Query id)
+                 * @param _id (object|query id)
                  */
                 subscribe = function (_id) {
                     subscriptionCount[_id] = (subscriptionCount[_id] || 0) + 1;
                     subscriptions[_id] = subscriptions[_id] || [];
                     subscriptions[_id].push(client);
                     subscriptions[_id] = _.uniq(subscriptions[_id]);
+                },
+
+                /**
+                 * Unsubscribe from a id
+                 *
+                 * @param _id (object|query id)
+                 */
+                unsubscribe = function (_id) {
+                    subscriptionCount[_id] = Math.max(--subscriptionCount[_id], 0);
+                    if (subscriptionCount[_id] === 0) {
+
+                        subscriptions[_id] = _.filter(subscriptions[_id], function (c) {
+                            return c !== client;
+                        });
+
+                        delete subscriptionCount[_id];
+
+                        if (subscriptions[_id].length === 0) {
+                            delete subscriptions[_id];
+                            delete queries[_id];
+                        }
+                    }
                 },
 
                 /**
@@ -130,6 +153,9 @@ module.exports = function storage (options) {
                 notifyQueries = function (oldObj, newObj) {
                     oldObj = oldObj || {};
                     newObj = newObj || {};
+
+                    var _id = newObj._id || oldObj._id;
+
                     each(queries, function (query, queryId) {
                         var oldMatch = query(oldObj),
                             newMatch = query(newObj);
@@ -138,9 +164,15 @@ module.exports = function storage (options) {
                             var event = !oldMatch ? 'match' : 'unmatch',
                                 notification = {
                                     event: event,
-                                    data: newObj
+                                    data: newObj,
+                                    _id: _id
                                 };
+
                             notify('notify-query', queryId, notification);
+
+                            if (event === 'match') {
+                                subscribe(newObj._id);
+                            }
                         }
                     });
                 };
@@ -152,6 +184,8 @@ module.exports = function storage (options) {
                 var event = obj._id ? 'change' : 'create';
                 backend.put(obj, function (err, newObj, oldObj) {
 
+                    var _id = newObj._id || oldObj._id;
+
                     var notification = {
                         event: err? 'error': event,
                         data: obj
@@ -160,7 +194,7 @@ module.exports = function storage (options) {
                     if (callback) { callback(notification); }
 
                     // notifies object subscriptions
-                    notify('notify', obj._id, notification);
+                    notify('notify', _id, notification);
 
                     // notifies query subscriptions
                     notifyQueries(oldObj, newObj);
@@ -190,13 +224,13 @@ module.exports = function storage (options) {
             /**
              * Handles the 'del' event
              */
-            client.on('del', function (_id, calllback) {
+            client.on('del', function (_id, callback) {
                 backend.del(_id, function (err, oldObj) {
                     var notification = {
                         event: err? 'error': 'del'
                     };
 
-                    if (calllback) { calllback(notification); }
+                    if (callback) { callback(notification); }
 
                     // notify object subscriptions
                     notify('notify', _id, notification);
@@ -230,25 +264,24 @@ module.exports = function storage (options) {
             /**
              * Handles the 'unsub' event
              */
-            client.on('unsub', function (_id) {
-                if (--subscriptionCount[_id] === 0) {
-                    subscriptions[_id] = _.without(subscriptions[_id], client);
-                    if (subscriptions[_id].length === 0) {
-                        delete subscriptions[_id];
-                    }
-                }
-            });
+            client.on('unsub', unsubscribe);
 
             /**
              * Handles the 'unsub-query' event
              */
-            client.on('unsub-query', function (id) {
-                if (--subscriptionCount[id] === 0) {
-                    subscriptions[id] = _.without(subscriptions[id], client);
-                    if (subscriptions[id].length === 0) {
-                        delete subscriptions[id];
-                        delete queries[id];
-                    }
+            client.on('unsub-query', unsubscribe);
+
+            /**
+             * Handles the 'disconnect event
+             */
+            client.on('disconnect', function () {
+
+                if (options.debug) {
+                    console.log({
+                        subscriptions: subscriptions,
+                        queries: queries,
+                        subscriptionCount: subscriptionCount
+                    });
                 }
             });
         }

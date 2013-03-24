@@ -10,7 +10,8 @@ var express     = require('express'),
 
 io.set('log level', 1);
 var storageApi = storage({
-    backend: backend()
+    backend: backend(),
+    debug: true
 });
 
 io.sockets.on('connection', storageApi.addClient);

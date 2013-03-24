@@ -3,7 +3,7 @@ var emitter = require('emitter'),
     each    = require('foreach'),
     map     = require('mapr').map,
     _       = require('underscore'),
-    getQueryId = require('./../query-id');
+    getQueryId = require('../query-id');
 
 module.exports = function (options) {
 
@@ -23,13 +23,20 @@ module.exports = function (options) {
             return function (notification) {
                 var subFn;
                 _id = _id || notification.data._id;
+
+                var unsub = _.once(function () {
+                    api.unsub(_id, subFn);
+                });
+
                 if (fn) {
-                    subFn = fn(notification);
+                    subFn = fn(notification, unsub);
                     if (notification.event !== 'error' && typeof subFn === 'function') {
                         addObjectNotificationCallback(_id, subFn);
                     }
                 }
-                api.unsub(_id);
+                if (!subFn) {
+                    unsub();
+                }
             };
         },
 
@@ -56,20 +63,35 @@ module.exports = function (options) {
                 socket.emit('del', _id, fn);
             },
 
-            query: function (query, fn) {
+            query: function (query, callback) {
                 var queryId = getQueryId(query);
 
                 socket.emit('query', query, function (notification) {
 
                     var objs = notification.data,
 
-                        unsubQuery = function () {
+                        didUnsubObjects = false,
+                        didUnsubQuery = false,
+
+
+                        unsubObjects = _.once(function () {
+                            didUnsubObjects = true;
                             each(objs, function (obj) {
                                 api.unsub(obj._id, notificationObj.object);
                             });
+                        }),
+
+                        unsubQuery = _.once(function () {
+                            didUnsubQuery = true;
                             api.unsubQuery(query, notificationObj.query);
                             api.unsubQuery(query, addRemoveObjects, false);
+                        }),
+
+                        unsub = function () {
+                            unsubObjects();
+                            unsubQuery();
                         },
+
 
                         getNotificationObj = function (notificationObj) {
                             if (!notificationObj) return {};
@@ -81,45 +103,55 @@ module.exports = function (options) {
                             return notificationObj;
                         },
 
-                        notificationObj = getNotificationObj(fn(notification, unsubQuery)),
+                        notificationObj = getNotificationObj(callback(notification, unsub)),
 
                         addRemoveObjects = function (notification) {
 
                             if (notification.event === 'match') {
-                                addObjectNotificationCallback(notification.data._id, notificationObj.object);
-                                objs.push(notification.data);
+                                if (!didUnsubObjects && notificationObj.object) {
+                                    addObjectNotificationCallback(notification._id, notificationObj.object);
+                                    objs.push(notification.data);
+                                } else {
+                                    api.unsub(notification._id, notificationObj.object);
+                                }
                             }
 
                             if (notification.event === 'unmatch') {
-                                api.unsub(notification.data._id, notificationObj.object);
+                                if (!didUnsubObjects && notificationObj.object) {
+                                    api.unsub(notification._id, notificationObj.object);
+                                }
                                 objs = _.filter(objs, function (obj) {
-                                    return obj._id !== notification.data._id;
+                                    return obj._id !== notification._id;
                                 });
                             }
                         };
 
 
-                    each(objs, function (obj) {
-                        if (notificationObj.object) {
+                    if (notificationObj.object) {
+                        each(objs, function (obj) {
                             addObjectNotificationCallback(obj._id, notificationObj.object);
-                        } else {
-                            api.unsub(obj._id);
-                        }
-                    });
+                        });
+                    } else {
+                        unsubObjects();
+                    }
 
                     if (notificationObj.query) {
                         addQueryNotificationCallback(queryId, addRemoveObjects);
                         addQueryNotificationCallback(queryId, notificationObj.query);
                     } else {
-                        api.unsubQuery(queryId);
+                        unsubQuery();
                     }
 
                 });
             },
 
-            unsub: function (_id, fn) {
+            unsub: function (_id, fn, send) {
+                if (typeof _id === 'undefined') { throw new Error('_id is not defined'); }
                 if (fn) { em.off(_id, fn); }
-                socket.emit('unsub', _id);
+
+                if (send !== false) {
+                    socket.emit('unsub', _id);
+                }
             },
 
             unsubQuery: function (query, fn, send) {
@@ -127,7 +159,9 @@ module.exports = function (options) {
                 if (fn) {
                     em.off(queryId, fn);
                 }
-                if (send !== false) socket.emit('unsub-query', queryId);
+                if (send !== false) {
+                    socket.emit('unsub-query', queryId);
+                }
             }
 
         }, doAsync);
