@@ -2,19 +2,20 @@
 var emitter = require('emitter'),
     each    = require('foreach'),
     map     = require('mapr').map,
+    _       = require('underscore'),
     getQueryId = require('./query-id');
 
 module.exports = function (options) {
 
     var em = emitter({}),
+
         socket = options.socket,
 
         addObjectNotificationCallback = function (_id, fn) {
             em.on(_id, fn);
         },
 
-        addQueryNotificationCallback = function (query, fn) {
-            var queryId = getQueryId(query);
+        addQueryNotificationCallback = function (queryId, fn) {
             em.on(queryId, fn);
         },
 
@@ -56,7 +57,10 @@ module.exports = function (options) {
             },
 
             query: function (query, fn) {
+                var queryId = getQueryId(query);
+
                 socket.emit('query', query, function (notification) {
+
                     var objs = notification.data,
 
                         unsubQuery = function () {
@@ -64,6 +68,7 @@ module.exports = function (options) {
                                 api.unsub(obj._id, notificationObj.object);
                             });
                             api.unsubQuery(query, notificationObj.query);
+                            api.unsubQuery(query, addRemoveObjects, false);
                         },
 
                         getNotificationObj = function (notificationObj) {
@@ -76,7 +81,22 @@ module.exports = function (options) {
                             return notificationObj;
                         },
 
-                        notificationObj = getNotificationObj(fn(notification, unsubQuery));
+                        notificationObj = getNotificationObj(fn(notification, unsubQuery)),
+
+                        addRemoveObjects = function (notification) {
+
+                            if (notification.action === 'match') {
+                                addObjectNotificationCallback(notification.data._id, notificationObj.object);
+                                objs.push(notification.data);
+                            }
+
+                            if (notification.action === 'unmatch') {
+                                api.unsub(notification.data._id, notificationObj.object);
+                                objs = _.filter(objs, function (obj) {
+                                    return obj._id !== notification.data._id;
+                                });
+                            }
+                        };
 
 
                     each(objs, function (obj) {
@@ -88,9 +108,10 @@ module.exports = function (options) {
                     });
 
                     if (notificationObj.query) {
-                        addQueryNotificationCallback(query, notificationObj.query);
+                        addQueryNotificationCallback(queryId, addRemoveObjects);
+                        addQueryNotificationCallback(queryId, notificationObj.query);
                     } else {
-                        api.unsubQuery(getQueryId(query));
+                        api.unsubQuery(queryId);
                     }
 
                 });
@@ -101,12 +122,12 @@ module.exports = function (options) {
                 socket.emit('unsub', _id);
             },
 
-            unsubQuery: function (query, fn) {
+            unsubQuery: function (query, fn, send) {
                 var queryId = getQueryId(query);
                 if (fn) {
                     em.off(queryId, fn);
                 }
-                socket.emit('unsub-query', queryId);
+                if (send !== false) socket.emit('unsub-query', queryId);
             }
 
         }, doAsync);

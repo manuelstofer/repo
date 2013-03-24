@@ -93,7 +93,8 @@ function describeInterface(name, client) {
         });
 
         describe('query', function () {
-           it('should return correct results', function (done) {
+
+            it('should return correct results', function (done) {
                 var obj1 = {tag: 'hello'},
                     obj2 = {tag: 'hello'},
                     obj3 = {tag: 'bla'};
@@ -190,6 +191,38 @@ function describeInterface(name, client) {
                                 notification.action.should.equal('unmatch');
                                 notification.data.tag.should.equal('changed');
                                 unsub();
+                                removeData(objs, done);
+                            }
+                        };
+                    });
+                });
+            });
+
+            it('should receive change notifications for added objects', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+                    var query = {tag: 'hello'};
+
+                    client.query(query, function (notification, unsub) {
+
+                        var add = {tag: 'hello', title: 'bla'},
+                            change;
+
+                        client.put(add, function (notification) {
+                            change = notification.data;
+                            change.title = 'changed';
+                            client.put(change);
+                        });
+
+                        return {
+                            query: function () {},
+                            object: function (notification) {
+                                notification.action.should.equal('change');
+                                notification.data.title.should.equal('changed');
+                                unsub();
+
+                                objs.push(change);
                                 removeData(objs, done);
                             }
                         };

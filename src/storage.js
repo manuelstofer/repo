@@ -7,7 +7,6 @@ var qry         = require('qry'),
 module.exports = function storage (options) {
 
     var backend         = options.backend,
-        io              = options.io,
 
         // sockets subscribed to an object
         objectSubscriptions   = {},
