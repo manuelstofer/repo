@@ -25,7 +25,7 @@ module.exports = function (options) {
                 _id = _id || notification.data._id;
                 if (fn) {
                     subFn = fn(notification);
-                    if (notification.action !== 'error' && typeof subFn === 'function') {
+                    if (notification.event !== 'error' && typeof subFn === 'function') {
                         addObjectNotificationCallback(_id, subFn);
                     }
                 }
@@ -85,12 +85,12 @@ module.exports = function (options) {
 
                         addRemoveObjects = function (notification) {
 
-                            if (notification.action === 'match') {
+                            if (notification.event === 'match') {
                                 addObjectNotificationCallback(notification.data._id, notificationObj.object);
                                 objs.push(notification.data);
                             }
 
-                            if (notification.action === 'unmatch') {
+                            if (notification.event === 'unmatch') {
                                 api.unsub(notification.data._id, notificationObj.object);
                                 objs = _.filter(objs, function (obj) {
                                     return obj._id !== notification.data._id;

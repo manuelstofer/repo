@@ -54,9 +54,9 @@ module.exports = function storage (options) {
                         newMatch = query(newObj);
 
                     if (oldMatch != newMatch) {
-                        var action = !oldMatch ? 'match' : 'unmatch';
+                        var event = !oldMatch ? 'match' : 'unmatch';
                         socket.emit('notify-query', queryId, {
-                            action: action,
+                            event: event,
                             data: newObj
                         });
                     }
@@ -64,10 +64,10 @@ module.exports = function storage (options) {
             };
 
         socket.on('put', function (obj, fn) {
-            var action = obj._id ? 'change' : 'create';
+            var event = obj._id ? 'change' : 'create';
             backend.put(obj, function (err, newObj, oldObj) {
                 var notification = {
-                    action: err? 'error': action,
+                    event: err? 'error': event,
                     data: obj
                 };
                 if (fn) { fn(notification); }
@@ -81,7 +81,7 @@ module.exports = function storage (options) {
             subscribe(_id);
             backend.get(_id, function (err, obj) {
                 var notification = {
-                    action: err? 'error': 'get',
+                    event: err? 'error': 'get',
                     data: obj
                 };
                 if (fn) {
@@ -94,7 +94,7 @@ module.exports = function storage (options) {
         socket.on('del', function (_id, fn) {
             backend.del(_id, function (err, oldObj) {
                 var notification = {
-                    action: err? 'error': 'del'
+                    event: err? 'error': 'del'
                 };
                 notify(_id, notification);
                 notifyQueries(oldObj, null)
@@ -107,7 +107,7 @@ module.exports = function storage (options) {
         socket.on('query', function (query, fn) {
             backend.query(query, function (err, objs) {
                 var notification = {
-                    action: err? 'error': 'query-result',
+                    event: err? 'error': 'query-result',
                     data: objs
                 };
                 each(_.pluck(objs, '_id'), subscribe);

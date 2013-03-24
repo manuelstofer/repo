@@ -16,7 +16,7 @@ function describeInterface(name, client) {
 
             it('should get a "create" notification', function (done) {
                 client.put({example: 'expected'}, function (notification) {
-                    notification.action.should.equal('create');
+                    notification.event.should.equal('create');
                     notification.data.example.should.equal('expected');
                     notification.data._id.should.not.be.undefined;
                     done();
@@ -32,7 +32,7 @@ function describeInterface(name, client) {
                     client.put(obj);
 
                     return function (notification) {
-                        notification.action.should.equal('change');
+                        notification.event.should.equal('change');
                         notification.data.example.should.equal('changed');
                         client.unsub(obj._id);
                         done();
@@ -47,7 +47,7 @@ function describeInterface(name, client) {
 
                     client.del(obj._id);
                     return function (notification) {
-                        notification.action.should.equal('del');
+                        notification.event.should.equal('del');
                         client.unsub(obj._id);
                         done();
                     };
@@ -62,7 +62,7 @@ function describeInterface(name, client) {
                     var obj = notification.data;
                     obj.example = 'changed';
                     client.put(obj, function (notification) {
-                        notification.action.should.equal('change');
+                        notification.event.should.equal('change');
                         notification.data.example.should.equal('changed');
                         notification.data._id.should.not.be.undefined;
                         done();
@@ -76,7 +76,7 @@ function describeInterface(name, client) {
             it('should get "error" notification getting a non existent object', function (done) {
 
                 client.get('non-existent', function (notification) {
-                    notification.action.should.equal('error');
+                    notification.event.should.equal('error');
                     done();
                 });
             });
@@ -86,7 +86,7 @@ function describeInterface(name, client) {
 
             it('should get "error" notification deleting a non existent object', function (done) {
                 client.del('non-existent', function (notification) {
-                    notification.action.should.equal('error');
+                    notification.event.should.equal('error');
                     done();
                 });
             });
@@ -103,7 +103,7 @@ function describeInterface(name, client) {
 
                     client.query({tag: 'hello'}, function (notification) {
 
-                        notification.action.should.equal('query-result');
+                        notification.event.should.equal('query-result');
                         notification.data.length.should.equal(2);
                         notification.data[0].tag.should.equal('hello');
                         notification.data[1].tag.should.equal('hello');
@@ -123,7 +123,7 @@ function describeInterface(name, client) {
                         client.del(obj._id);
                         return function (notification) {
                             unsub();
-                            notification.action.should.equal('del');
+                            notification.event.should.equal('del');
                             done();
                         }
 
@@ -143,7 +143,7 @@ function describeInterface(name, client) {
                         return {
                             object: function (notification) {
                                 unsub();
-                                notification.action.should.equal('change');
+                                notification.event.should.equal('change');
 
                                 removeData(objs, done);
                             }
@@ -164,7 +164,7 @@ function describeInterface(name, client) {
 
                         return {
                             query: function (notification) {
-                                notification.action.should.equal('match');
+                                notification.event.should.equal('match');
                                 notification.data.bla.should.equal('bla');
                                 notification.data.tag.should.equal('hello');
                                 unsub();
@@ -188,7 +188,7 @@ function describeInterface(name, client) {
                         client.put(obj);
                         return {
                             query: function (notification) {
-                                notification.action.should.equal('unmatch');
+                                notification.event.should.equal('unmatch');
                                 notification.data.tag.should.equal('changed');
                                 unsub();
                                 removeData(objs, done);
@@ -218,7 +218,7 @@ function describeInterface(name, client) {
                         return {
                             query: function () {},
                             object: function (notification) {
-                                notification.action.should.equal('change');
+                                notification.event.should.equal('change');
                                 notification.data.title.should.equal('changed');
                                 unsub();
 
@@ -247,7 +247,7 @@ function describeInterface(name, client) {
                         return {
                             query: function () {},
                             object: function (notification) {
-                                notification.action.should.equal('del');
+                                notification.event.should.equal('del');
                                 unsub();
 
                                 removeData(objs, done);
