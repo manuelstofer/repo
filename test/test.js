@@ -256,6 +256,35 @@ function describeInterface(name, client) {
                     });
                 });
             });
+
+
+            it('should not receive notifications for objects not matching a query anymore', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+                    var query = {tag: 'hello'};
+
+                    client.query(query, function (notification, unsub) {
+                        var change = notification.data;
+
+                        change.tag = 'no-match';
+
+                        client.put(change);
+
+                        setTimeout(function () {
+                            unsub();
+                            removeData(objs, done);
+                        }, 500);
+
+                        return {
+                            query: function () {},
+                            object: function () {
+                                true.should.equal.false();
+                            }
+                        };
+                    });
+                });
+            });
         });
 
     });
