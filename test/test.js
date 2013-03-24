@@ -198,7 +198,7 @@ function describeInterface(name, client) {
                 });
             });
 
-            it('should receive change notifications for added objects', function (done) {
+            it('should receive change notifications for new objects matching a query', function (done) {
                 var obj1 = {tag: 'hello'};
 
                 createData([obj1], function (objs) {
@@ -223,6 +223,33 @@ function describeInterface(name, client) {
                                 unsub();
 
                                 objs.push(change);
+                                removeData(objs, done);
+                            }
+                        };
+                    });
+                });
+            });
+
+            it('should receive delete notifications for new objects matching a query', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+                    var query = {tag: 'hello'};
+
+                    client.query(query, function (notification, unsub) {
+
+                        var add = {tag: 'hello', title: 'bla'};
+
+                        client.put(add, function (notification) {
+                            client.del(notification.data._id);
+                        });
+
+                        return {
+                            query: function () {},
+                            object: function (notification) {
+                                notification.action.should.equal('del');
+                                unsub();
+
                                 removeData(objs, done);
                             }
                         };
