@@ -4,7 +4,7 @@
   "description": "",
   "keywords": [],
   "dependencies": {
-    "enyo/md5": "*",
+    "manuelstofer/md5": "*",
     "manuelstofer/mapr": "*",
     "manuelstofer/foreach": "*",
     "manuelstofer/qry": "*",
