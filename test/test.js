@@ -93,7 +93,7 @@ function describeInterface(name, client) {
         });
 
         describe('query', function () {
-            it('should return correct results', function (done) {
+           it('should return correct results', function (done) {
                 var obj1 = {tag: 'hello'},
                     obj2 = {tag: 'hello'},
                     obj3 = {tag: 'bla'};
@@ -117,16 +117,15 @@ function describeInterface(name, client) {
 
                 createData([obj1], function () {
 
-                    client.query({tag: 'hello'}, function (notification) {
+                    client.query({tag: 'hello'}, function (notification, unsub) {
                         var obj = notification.data[0];
                         client.del(obj._id);
-                        return [
-                            function (notification) {
-                                client.unsub(obj._id);
-                                notification.action.should.equal('del');
-                                done();
-                            }
-                        ];
+                        return function (notification) {
+                            unsub();
+                            notification.action.should.equal('del');
+                            done();
+                        }
+
                     });
                 });
             });
@@ -136,17 +135,64 @@ function describeInterface(name, client) {
 
                 createData([obj1], function (objs) {
 
-                    client.query({tag: 'hello'}, function (notification) {
+                    client.query({tag: 'hello'}, function (notification, unsub) {
                         var obj = notification.data[0];
                         obj.example = 'hello';
                         client.put(obj);
-                        return [
-                            function (notification) {
-                                client.unsub(obj._id);
+                        return {
+                            object: function (notification) {
+                                unsub();
                                 notification.action.should.equal('change');
+
                                 removeData(objs, done);
                             }
-                        ];
+                        };
+                    });
+                });
+            });
+
+            it('should receive notification when new object matches query', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+                    var query = {tag: 'hello'};
+
+                    client.query(query, function (notification, unsub) {
+                        var add = {bla: 'bla', tag: 'hello'};
+                        client.put(add);
+
+                        return {
+                            query: function (notification) {
+                                notification.action.should.equal('match');
+                                notification.data.bla.should.equal('bla');
+                                notification.data.tag.should.equal('hello');
+                                unsub();
+                                objs.push(notification.data);
+                                removeData(objs, done);
+                            }
+                        };
+                    });
+                });
+            });
+
+            it('should receive notification when an object does not match anymore', function (done) {
+                var obj1 = {tag: 'hello'};
+
+                createData([obj1], function (objs) {
+                    var query = {tag: 'hello'},
+                        obj = objs[0];
+
+                    client.query(query, function (notification, unsub) {
+                        obj.tag = 'changed';
+                        client.put(obj);
+                        return {
+                            query: function (notification) {
+                                notification.action.should.equal('unmatch');
+                                notification.data.tag.should.equal('changed');
+                                unsub();
+                                removeData(objs, done);
+                            }
+                        };
                     });
                 });
             });

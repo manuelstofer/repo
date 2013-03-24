@@ -11,14 +11,21 @@ module.exports = function (options) {
        return autoIncId;
     }
 
+    function getObjData (obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
     return {
 
         put: function (obj, fn) {
+            var oldObj = {};
             if (!obj._id) {
                 obj._id = autoInc();
+            } else {
+                oldObj = objs[obj._id];
             }
-            objs[obj._id] = obj;
-            fn(null, obj);
+            objs[obj._id] = getObjData(obj);
+            fn(null, obj, oldObj);
         },
 
         get: function (_id, fn) {
@@ -28,8 +35,9 @@ module.exports = function (options) {
 
         del: function (_id, fn) {
             var err = typeof objs[_id] !== 'undefined' ? null: 'error';
+            var oldObj = objs[_id];
             delete objs[_id];
-            fn(err);
+            fn(err, oldObj);
         },
 
         query: function (query, fn) {
