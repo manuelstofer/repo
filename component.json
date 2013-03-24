@@ -13,8 +13,8 @@
   },
   "scripts": [
     "index.js",
-    "src/client.js",
-    "src/mock.js",
+    "src/client/client.js",
+    "src/client/mock.js",
     "src/storage.js",
     "src/query-id.js",
     "src/backends/memory.js"
