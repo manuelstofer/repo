@@ -12,7 +12,6 @@ build:
 
 
 test: build
-	@echo test in browser
-	@./node_modules/mocha-phantomjs/bin/mocha-phantomjs http://localhost:2014/test/test-runner.html
+	./test/test-runner.sh
 
 .PHONY: test build
