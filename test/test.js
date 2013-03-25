@@ -44,11 +44,10 @@ function describeInterface(name, client) {
 
                 client.put({example: 'expected'}, function (notification, unsub) {
                     var obj = notification.data;
-
                     client.del(obj._id);
                     return function (notification) {
                         notification.event.should.equal('del');
-                        client.unsub(obj._id);
+                        unsub();
                         done();
                     };
                 });

@@ -11,35 +11,6 @@ module.exports = function (options) {
 
         socket = options.socket,
 
-        addObjectNotificationCallback = function (_id, fn) {
-            em.on(_id, fn);
-        },
-
-        addQueryNotificationCallback = function (queryId, fn) {
-            em.on(queryId, fn);
-        },
-
-        createObjectCallback = function (_id, fn) {
-            return function (notification) {
-                var subFn;
-                _id = _id || notification.data._id;
-
-                var unsub = _.once(function () {
-                    api.unsub(_id, subFn);
-                });
-
-                if (fn) {
-                    subFn = fn(notification, unsub);
-                    if (notification.event !== 'error' && typeof subFn === 'function') {
-                        addObjectNotificationCallback(_id, subFn);
-                    }
-                }
-                if (!subFn) {
-                    unsub();
-                }
-            };
-        },
-
         doAsync = function (fn) {
             return function () {
                 var args = arguments;
@@ -47,6 +18,41 @@ module.exports = function (options) {
                     fn.apply(null, args);
                 }, 0);
             }
+        },
+
+        unsubscribe = doAsync(function (_id, fn, send) {
+            if (typeof _id === 'undefined') { throw new Error('_id is not defined'); }
+            if (fn) { em.off(_id, fn); }
+
+            if (send !== false) {
+                socket.emit('unsub', _id);
+            }
+        }),
+
+        createObjectCallback = function (_id, fn) {
+            return function (notification) {
+                var subFn;
+                _id = _id || notification.data._id;
+
+                var isSubscribed = true,
+                    unsub = _.once(function () {
+                        isSubscribed = false;
+                        unsubscribe(_id, handleChanges);
+                    }),
+                    handleChanges = function (notification) {
+                        subFn(notification);
+                    };
+
+                if (fn) {
+                    subFn = fn(notification, unsub);
+                    if (notification.event !== 'error' && typeof subFn === 'function') {
+                        em.on(_id, handleChanges);
+                    }
+                }
+                if (!subFn) {
+                    unsub();
+                }
+            };
         },
 
         api = map({
@@ -70,13 +76,12 @@ module.exports = function (options) {
 
                     var isSubscribed = true,
 
-                        unsubQuery = _.once(function () {
+                        unsub = _.once(function () {
                             isSubscribed = false;
-                            api.unsubQuery(query, handleQueryNotification);
+                            unsubscribe(queryId, handleQueryNotification);
                         }),
 
                         getNotificationObj = function (notificationObj) {
-                            if (!notificationObj) return {};
                             if (typeof notificationObj == 'function') {
                                 return {
                                     object: notificationObj
@@ -99,43 +104,19 @@ module.exports = function (options) {
                             }
                         },
 
-                        notificationObj = getNotificationObj(callback(notification, unsubQuery));
+                        notificationObj = getNotificationObj(callback(notification, unsub));
 
-                    if (notificationObj.query || notificationObj.object) {
-                        addQueryNotificationCallback(queryId, handleQueryNotification);
+                    if (notificationObj) {
+                        em.on(queryId, handleQueryNotification)
                     } else {
-                        unsubQuery();
+                        unsub();
                     }
 
                 });
-            },
-
-            unsub: function (_id, fn, send) {
-                if (typeof _id === 'undefined') { throw new Error('_id is not defined'); }
-                if (fn) { em.off(_id, fn); }
-
-                if (send !== false) {
-                    socket.emit('unsub', _id);
-                }
-            },
-
-            unsubQuery: function (query, fn, send) {
-                var queryId = getQueryId(query);
-                if (fn) {
-                    em.off(queryId, fn);
-                }
-                if (send !== false) {
-                    socket.emit('unsub-query', queryId);
-                }
             }
-
         }, doAsync);
 
     socket.on('notify', function (_id, notification) {
-        em.emit(_id, notification);
-    });
-
-    socket.on('notify-query', function (_id, notification) {
         em.emit(_id, notification);
     });
 

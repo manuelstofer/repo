@@ -141,13 +141,12 @@ module.exports = function storage (options) {
                 /**
                  * Send a notification for a object
                  *
-                 * @param event 'notify' | 'notify-query'
                  * @param _id the object id
                  * @param notification the notification
                  */
-                notify = function (event, _id, notification) {
+                notify = function (_id, notification) {
                     each(subscriptions[_id] || [], function (socket) {
-                        client.emit(event, _id, notification);
+                        socket.emit('notify', _id, notification);
                     });
                 },
 
@@ -208,7 +207,7 @@ module.exports = function storage (options) {
                     if (callback) { callback(notification); }
 
                     // notifies object subscriptions
-                    notify('notify', _id, notification);
+                    notify(_id, notification);
 
                     // notifies query subscriptions
                     notifyQueries(oldObj, newObj);
@@ -247,7 +246,7 @@ module.exports = function storage (options) {
                     if (callback) { callback(notification); }
 
                     // notify object subscriptions
-                    notify('notify', _id, notification);
+                    notify(_id, notification);
 
                     // notify query subscriptions
                     notifyQueries(oldObj, null)
@@ -277,10 +276,6 @@ module.exports = function storage (options) {
              */
             client.on('unsub', unsubscribe);
 
-            /**
-             * Handles the 'unsub-query' event
-             */
-            client.on('unsub-query', unsubscribe);
 
             /**
              * Handles the 'disconnect' event
@@ -301,7 +296,7 @@ module.exports = function storage (options) {
 
             function notifyQuery (queryId, notification) {
                 if (subscriptionCount[queryId]) {
-                    notify('notify-query', queryId, notification);
+                    client.emit('notify', queryId, notification);
                 }
             }
             qemitter.on('notify-query', notifyQuery)
