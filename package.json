@@ -10,7 +10,8 @@
         "qry": "*",
         "underscore": "*",
         "express": "*",
-        "socket.io": "*"
+        "socket.io": "*",
+        "emitter" : "https://github.com/component/emitter/archive/1.0.0.tar.gz"
     },
     "devDependencies": {
         "mocha": "*",

@@ -2,7 +2,14 @@
 var qry         = require('qry'),
     _           = require('underscore'),
     each        = require('foreach'),
-    getQueryId  = require('./query-id');
+    getQueryId  = require('./query-id'),
+    emitter;
+
+try {
+    emitter     = require('emitter');
+} catch (err) {
+    emitter = require('events').EventEmitter;
+}
 
 /**
  * Creates a storage for a backend specified by options.backend
@@ -25,7 +32,9 @@ module.exports = function storage (options) {
         /**
          * Dictionary: { query id : query match function }
          */
-        queries         = {};
+        queries         = {},
+
+        qemitter = emitter({});
 
 
     return {
@@ -107,9 +116,7 @@ module.exports = function storage (options) {
                     subscriptionCount[_id] = Math.max(--subscriptionCount[_id], 0);
                     if (subscriptionCount[_id] === 0) {
 
-                        subscriptions[_id] = _.filter(subscriptions[_id], function (c) {
-                            return c !== client;
-                        });
+                        subscriptions[_id] = _.without(subscriptions[_id], client);
 
                         delete subscriptionCount[_id];
 
@@ -168,11 +175,9 @@ module.exports = function storage (options) {
                                     _id: _id
                                 };
 
-                            notify('notify-query', queryId, notification);
+                            qemitter.emit('notify-query', queryId, notification, event);
 
-                            if (event === 'match') {
-                                subscribe(newObj._id);
-                            }
+
                         }
                     });
                 };
@@ -272,7 +277,7 @@ module.exports = function storage (options) {
             client.on('unsub-query', unsubscribe);
 
             /**
-             * Handles the 'disconnect event
+             * Handles the 'disconnect' event
              */
             client.on('disconnect', function () {
 
@@ -283,7 +288,21 @@ module.exports = function storage (options) {
                         subscriptionCount: subscriptionCount
                     });
                 }
+                subscriptionCount = null;
+
+                qemitter.off('notify-query', notifyQuery);
             });
+
+            function notifyQuery(queryId, notification, event) {
+                if (subscriptionCount[queryId]) {
+                    notify('notify-query', queryId, notification);
+
+                    if (event === 'match') {
+                        subscribe(notification.data._id);
+                    }
+                }
+            }
+            qemitter.on('notify-query', notifyQuery)
         }
     };
 };
