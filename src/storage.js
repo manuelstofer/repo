@@ -54,21 +54,20 @@ module.exports = function storage (options) {
          *      del (_id, callback)
          *      query (query, callback)
          *      unsub (_id)
-         *      unsub-query (id)
          *
          * - Subscriptions are added implicit on the get, put, query event.
-         *   The client MUST cancel subscriptions manually using the unsub and unsub-query event.
+         *   The client MUST cancel subscriptions manually using the unsub event.
          *
          * - The storage keeps a subscription count to release subscriptions as soon as their count reaches zero.
          *   All notifications are sent only once to each client. Even if a client has multiple subscriptions to
          *   the same object / query.
          *
-         * - The storage sends direct results of events back using the callback methods.
+         * - The storage sends direct results of events back using callback methods.
          *   Changes on subscribed objects and on query results are sent as notifications.
          *
          * - Notifications:
          *
-         *      Are transmitted with the 'notify' and 'notify-query' event.
+         *      Are transmitted with the 'notify' event.
          *
          *      Structure:
          *      {
@@ -164,34 +163,22 @@ module.exports = function storage (options) {
 
                     each(queries, function (query, queryId) {
                         var oldMatch = query(oldObj),
-                            newMatch = query(newObj),
-                            event;
+                            newMatch = query(newObj);
 
-                        if (!oldMatch && newMatch) {
-                            event = 'match';
-                        } else if (oldMatch && !newMatch) {
-                            event = 'unmatch';
-                        }
-
-                        if (event != 'match') {
-                            var notification = {
-                                event: newObj._id ? 'change' : 'del',
+                        if (oldMatch != newMatch) {
+                            qemitter.emit('notify-query', queryId, {
+                                event: newMatch ? 'match' : 'unmatch',
                                 data: newObj,
                                 _id: _id
-                            };
-                            qemitter.emit('notify-query', queryId, notification);
+                            });
+
+                        } else if (newMatch) {
+                            qemitter.emit('notify-query', queryId, {
+                                event: 'change',
+                                data: newObj,
+                                _id: _id
+                            });
                         }
-
-                        if (event) {
-                            var notification = {
-                                    event: event,
-                                    data: newObj,
-                                    _id: _id
-                                };
-
-                            qemitter.emit('notify-query', queryId, notification);
-                        }
-
                     });
                 };
 
