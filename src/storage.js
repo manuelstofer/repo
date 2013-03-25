@@ -3,13 +3,7 @@ var qry         = require('qry'),
     _           = require('underscore'),
     each        = require('foreach'),
     getQueryId  = require('./query-id'),
-    emitter;
-
-try {
     emitter     = require('emitter');
-} catch (err) {
-    emitter = require('events').EventEmitter;
-}
 
 /**
  * Creates a storage for a backend specified by options.backend
