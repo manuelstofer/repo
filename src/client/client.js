@@ -11,7 +11,10 @@ module.exports = function (options) {
 
         socket = options.socket,
 
-        doAsync = function (fn) {
+        /**
+         * Wraps function with setTimeout
+         */
+        async = function (fn) {
             return function () {
                 var args = arguments;
                 return setTimeout(function () {
@@ -20,23 +23,32 @@ module.exports = function (options) {
             }
         },
 
-        unsubscribe = doAsync(function (_id, fn, send) {
+        /**
+         * Unsubscribe an from Object / Query
+         *
+         * @param _id object or query id
+         * @param fn event handler
+         */
+        unsubscribe = async(function (_id, fn) {
             if (typeof _id === 'undefined') { throw new Error('_id is not defined'); }
             if (fn) { em.off(_id, fn); }
 
-            if (send !== false) {
-                socket.emit('unsub', _id);
-            }
+            socket.emit('unsub', _id);
         }),
 
+        /**
+         * Wraps callback function
+         *
+         * @param _id object or query id
+         * @param fn callback
+         * @return function
+         */
         createCallback = function (_id, fn) {
             return function (notification) {
                 _id = _id || notification.data._id;
 
                 var handler,
-
                     isSubscribed = true,
-
                     unsub = _.once(function () {
                         isSubscribed = false;
                         unsubscribe(_id, handleNotification);
@@ -69,23 +81,47 @@ module.exports = function (options) {
 
         api = map({
 
+            /**
+             * Get an object
+             *
+             * @param _id
+             * @param fn
+             */
             get: function (_id, fn) {
                 socket.emit('get', _id, createCallback(_id, fn));
             },
 
+            /**
+             * Update / Insert an object
+             *
+             * @param obj
+             * @param fn
+             */
             put: function (obj, fn) {
                 socket.emit('put', obj, createCallback(obj._id, fn));
             },
 
+            /**
+             * Delete an object
+             *
+             * @param _id
+             * @param fn
+             */
             del: function (_id, fn) {
                 socket.emit('del', _id, fn);
             },
 
+            /**
+             * Query
+             *
+             * @param query MongoDB query object
+             * @param callback
+             */
             query: function (query, callback) {
                 socket.emit('query', query, createCallback(getQueryId(query), callback));
             }
 
-        }, doAsync);
+        }, async);
 
     socket.on('notify', function (_id, notification) {
         em.emit(_id, notification);
