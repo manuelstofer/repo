@@ -6,15 +6,29 @@ var express     = require('express'),
     server      = http.createServer(app),
     io          = require('socket.io').listen(server),
     storage     = require('../src/storage'),
-    backend     = require('../src/backends/memory');
+    mongo       = require('../src/backends/mongo');
 
 io.set('log level', 1);
-var storageApi = storage({
-    backend: backend(),
-    debug: true
-});
 
-io.sockets.on('connection', storageApi.addClient);
+var options = {
+        server: {},
+        db: {
+            name: 'test',
+            options: {
+                safe: true
+            }
+        },
+        collection: 'test'
+    };
+
+mongo(options, function (backend) {
+    console.log('connected to mongodb');
+    var storageApi = storage({
+        backend: backend,
+        debug: true
+    });
+    io.sockets.on('connection', storageApi.addClient);
+});
 
 app.configure(function () {
     app.use(express.logger('dev'));

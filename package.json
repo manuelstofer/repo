@@ -11,7 +11,8 @@
         "underscore": "*",
         "express": "*",
         "socket.io": "*",
-        "emitter" : "https://github.com/component/emitter/archive/1.0.0.tar.gz"
+        "emitter" : "https://github.com/component/emitter/archive/1.0.0.tar.gz",
+        "mongojs": "*"
     },
     "devDependencies": {
         "mocha": "*",
