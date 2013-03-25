@@ -12,7 +12,7 @@
         "express": "*",
         "socket.io": "*",
         "emitter" : "https://github.com/component/emitter/archive/1.0.0.tar.gz",
-        "mongojs": "*",
+        "mongodb": "*",
         "md5": "*"
     },
     "devDependencies": {
