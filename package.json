@@ -23,6 +23,6 @@
     },
     "main": "server",
     "scripts": {
-        "test": "make test"
+        "test": "make test-install"
     }
 }

@@ -14,4 +14,6 @@ build:
 test: build
 	./test/test-runner.sh
 
+test-install: install test
+
 .PHONY: test build
