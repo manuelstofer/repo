@@ -3,8 +3,8 @@ module.exports = function () {
 
     var emitter = require('emitter'),
         client  = require('./client'),
-        backend = require('./../backends/memory'),
-        storage = require('./../storage'),
+        backend = require('../backends/memory'),
+        storage = require('../storage'),
         socket = emitter({});
 
     storage({ backend: backend() }).addClient(socket);

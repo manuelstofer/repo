@@ -29,27 +29,39 @@ module.exports = function (options) {
             }
         }),
 
-        createObjectCallback = function (_id, fn) {
+        createCallback = function (_id, fn) {
             return function (notification) {
-                var subFn;
                 _id = _id || notification.data._id;
 
-                var isSubscribed = true,
+                var handler,
+
+                    isSubscribed = true,
+
                     unsub = _.once(function () {
                         isSubscribed = false;
-                        unsubscribe(_id, handleChanges);
+                        unsubscribe(_id, handleNotification);
                     }),
-                    handleChanges = function (notification) {
-                        subFn(notification);
+
+                    handleNotification = function (notification) {
+                        if (isSubscribed) {
+                            if (typeof handler === 'function') {
+                                handler(notification);
+                            } else {
+                                var fn = handler[notification.event];
+                                if (fn) {
+                                    fn(notification);
+                                }
+                            }
+                        }
                     };
 
                 if (fn) {
-                    subFn = fn(notification, unsub);
-                    if (notification.event !== 'error' && typeof subFn === 'function') {
-                        em.on(_id, handleChanges);
+                    handler = fn(notification, unsub);
+                    if (handler && notification.event !== 'error') {
+                        em.on(_id, handleNotification);
                     }
                 }
-                if (!subFn) {
+                if (!handler) {
                     unsub();
                 }
             };
@@ -58,11 +70,11 @@ module.exports = function (options) {
         api = map({
 
             get: function (_id, fn) {
-                socket.emit('get', _id, createObjectCallback(_id, fn));
+                socket.emit('get', _id, createCallback(_id, fn));
             },
 
             put: function (obj, fn) {
-                socket.emit('put', obj, createObjectCallback(obj._id, fn));
+                socket.emit('put', obj, createCallback(obj._id, fn));
             },
 
             del: function (_id, fn) {
@@ -70,40 +82,9 @@ module.exports = function (options) {
             },
 
             query: function (query, callback) {
-                var queryId = getQueryId(query);
-
-                socket.emit('query', query, function (notification) {
-
-                    var isSubscribed = true,
-
-                        unsub = _.once(function () {
-                            isSubscribed = false;
-                            unsubscribe(queryId, handleQueryNotification);
-                        }),
-
-                        handleQueryNotification = function (notification) {
-                            if (isSubscribed) {
-                                if (typeof notificationObj === 'function') {
-                                    notificationObj(notification);
-                                } else {
-                                    var handler = notificationObj[notification.event];
-                                    if (handler) {
-                                        handler(notification);
-                                    }
-                                }
-                            }
-                        },
-
-                        notificationObj = callback(notification, unsub);
-
-                    if (notificationObj) {
-                        em.on(queryId, handleQueryNotification)
-                    } else {
-                        unsub();
-                    }
-
-                });
+                socket.emit('query', query, createCallback(getQueryId(query), callback));
             }
+
         }, doAsync);
 
     socket.on('notify', function (_id, notification) {
