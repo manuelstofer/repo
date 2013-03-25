@@ -81,30 +81,20 @@ module.exports = function (options) {
                             unsubscribe(queryId, handleQueryNotification);
                         }),
 
-                        getNotificationObj = function (notificationObj) {
-                            if (typeof notificationObj == 'function') {
-                                return {
-                                    object: notificationObj
-                                }
-                            }
-                            return notificationObj;
-                        },
-
                         handleQueryNotification = function (notification) {
                             if (isSubscribed) {
-                                if (_.contains(['match', 'unmatch'], notification.event)) {
-                                    if (notificationObj.query) {
-                                        notificationObj.query(notification);
-                                    }
+                                if (typeof notificationObj === 'function') {
+                                    notificationObj(notification);
                                 } else {
-                                    if (notificationObj.object) {
-                                        notificationObj.object(notification);
+                                    var handler = notificationObj[notification.event];
+                                    if (handler) {
+                                        handler(notification);
                                     }
                                 }
                             }
                         },
 
-                        notificationObj = getNotificationObj(callback(notification, unsub));
+                        notificationObj = callback(notification, unsub);
 
                     if (notificationObj) {
                         em.on(queryId, handleQueryNotification)

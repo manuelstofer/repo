@@ -164,18 +164,13 @@ module.exports = function storage (options) {
 
                     each(queries, function (query, queryId) {
                         var oldMatch = query(oldObj),
-                            newMatch = query(newObj);
+                            newMatch = query(newObj),
+                            event;
 
-                        if (oldMatch != newMatch) {
-                            var event = !oldMatch ? 'match' : 'unmatch',
-                                notification = {
-                                    event: event,
-                                    data: newObj,
-                                    _id: _id
-                                };
-
-                            qemitter.emit('notify-query', queryId, notification);
-
+                        if (!oldMatch && newMatch) {
+                            event = 'match';
+                        } else if (oldMatch && !newMatch) {
+                            event = 'unmatch';
                         }
 
                         if (event != 'match') {
@@ -184,6 +179,16 @@ module.exports = function storage (options) {
                                 data: newObj,
                                 _id: _id
                             };
+                            qemitter.emit('notify-query', queryId, notification);
+                        }
+
+                        if (event) {
+                            var notification = {
+                                    event: event,
+                                    data: newObj,
+                                    _id: _id
+                                };
+
                             qemitter.emit('notify-query', queryId, notification);
                         }
 

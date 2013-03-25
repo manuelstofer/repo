@@ -139,7 +139,7 @@ function describeInterface(name, client) {
                         obj.example = 'hello';
                         client.put(obj);
                         return {
-                            object: function (notification) {
+                            change: function (notification) {
                                 unsub();
                                 notification.event.should.equal('change');
 
@@ -161,7 +161,7 @@ function describeInterface(name, client) {
                         client.put(add);
 
                         return {
-                            query: function (notification) {
+                            match: function (notification) {
                                 notification.event.should.equal('match');
                                 notification.data.bla.should.equal('bla');
                                 notification.data.tag.should.equal('hello');
@@ -185,7 +185,7 @@ function describeInterface(name, client) {
                         obj.tag = 'changed';
                         client.put(obj);
                         return {
-                            query: function (notification) {
+                            unmatch: function (notification) {
                                 notification.event.should.equal('unmatch');
                                 notification.data.tag.should.equal('changed');
                                 unsub();
@@ -214,8 +214,7 @@ function describeInterface(name, client) {
                         });
 
                         return {
-                            query: function () {},
-                            object: function (notification) {
+                            change: function (notification) {
                                 notification.event.should.equal('change');
                                 notification.data.title.should.equal('changed');
                                 unsub();
@@ -243,8 +242,7 @@ function describeInterface(name, client) {
                         });
 
                         return {
-                            query: function () {},
-                            object: function (notification) {
+                            del: function (notification) {
                                 notification.event.should.equal('del');
                                 unsub();
 
@@ -274,11 +272,8 @@ function describeInterface(name, client) {
                             removeData(objs, done);
                         }, 500);
 
-                        return {
-                            query: function () {},
-                            object: function () {
-                                true.should.equal.false;
-                            }
+                        return function () {
+                            true.should.equal.false;
                         };
                     });
                 });
