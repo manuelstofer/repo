@@ -68,30 +68,12 @@ module.exports = function (options) {
 
                 socket.emit('query', query, function (notification) {
 
-                    var objs = notification.data,
-
-                        didUnsubObjects = false,
-                        didUnsubQuery = false,
-
-
-                        unsubObjects = _.once(function () {
-                            didUnsubObjects = true;
-                            each(objs, function (obj) {
-                                api.unsub(obj._id, notificationObj.object);
-                            });
-                        }),
+                    var isSubscribed = true,
 
                         unsubQuery = _.once(function () {
-                            didUnsubQuery = true;
-                            api.unsubQuery(query, notificationObj.query);
-                            api.unsubQuery(query, addRemoveObjects, false);
+                            isSubscribed = false;
+                            api.unsubQuery(query, handleQueryNotification);
                         }),
-
-                        unsub = function () {
-                            unsubObjects();
-                            unsubQuery();
-                        },
-
 
                         getNotificationObj = function (notificationObj) {
                             if (!notificationObj) return {};
@@ -103,41 +85,24 @@ module.exports = function (options) {
                             return notificationObj;
                         },
 
-                        notificationObj = getNotificationObj(callback(notification, unsub)),
-
-                        addRemoveObjects = function (notification) {
-
-                            if (notification.event === 'match') {
-                                if (!didUnsubObjects && notificationObj.object) {
-                                    addObjectNotificationCallback(notification._id, notificationObj.object);
-                                    objs.push(notification.data);
+                        handleQueryNotification = function (notification) {
+                            if (isSubscribed) {
+                                if (_.contains(['match', 'unmatch'], notification.event)) {
+                                    if (notificationObj.query) {
+                                        notificationObj.query(notification);
+                                    }
                                 } else {
-                                    api.unsub(notification._id, notificationObj.object);
+                                    if (notificationObj.object) {
+                                        notificationObj.object(notification);
+                                    }
                                 }
                             }
+                        },
 
-                            if (notification.event === 'unmatch') {
-                                if (!didUnsubObjects && notificationObj.object) {
-                                    api.unsub(notification._id, notificationObj.object);
-                                }
-                                objs = _.filter(objs, function (obj) {
-                                    return obj._id !== notification._id;
-                                });
-                            }
-                        };
+                        notificationObj = getNotificationObj(callback(notification, unsubQuery));
 
-
-                    if (notificationObj.object) {
-                        each(objs, function (obj) {
-                            addObjectNotificationCallback(obj._id, notificationObj.object);
-                        });
-                    } else {
-                        unsubObjects();
-                    }
-
-                    if (notificationObj.query) {
-                        addQueryNotificationCallback(queryId, addRemoveObjects);
-                        addQueryNotificationCallback(queryId, notificationObj.query);
+                    if (notificationObj.query || notificationObj.object) {
+                        addQueryNotificationCallback(queryId, handleQueryNotification);
                     } else {
                         unsubQuery();
                     }

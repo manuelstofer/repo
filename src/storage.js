@@ -175,10 +175,19 @@ module.exports = function storage (options) {
                                     _id: _id
                                 };
 
-                            qemitter.emit('notify-query', queryId, notification, event);
-
+                            qemitter.emit('notify-query', queryId, notification);
 
                         }
+
+                        if (event != 'match') {
+                            var notification = {
+                                event: newObj._id ? 'change' : 'del',
+                                data: newObj,
+                                _id: _id
+                            };
+                            qemitter.emit('notify-query', queryId, notification);
+                        }
+
                     });
                 };
 
@@ -258,9 +267,6 @@ module.exports = function storage (options) {
 
                     if (callback) { callback(notification); }
 
-                    // subscribes to all objects in the result set
-                    each(_.pluck(objs, '_id'), subscribe);
-
                     // subscribes to the query
                     subscribeQuery(query);
                 });
@@ -293,13 +299,9 @@ module.exports = function storage (options) {
                 qemitter.off('notify-query', notifyQuery);
             });
 
-            function notifyQuery(queryId, notification, event) {
+            function notifyQuery (queryId, notification) {
                 if (subscriptionCount[queryId]) {
                     notify('notify-query', queryId, notification);
-
-                    if (event === 'match') {
-                        subscribe(notification.data._id);
-                    }
                 }
             }
             qemitter.on('notify-query', notifyQuery)
