@@ -3,7 +3,9 @@
 var qry = require('qry');
 
 module.exports = function (options) {
-    var objs = {},
+    options = options || {};
+
+    var objs = options.data || {},
         autoIncId = 0;
 
     function autoInc () {

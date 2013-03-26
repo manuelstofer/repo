@@ -1,5 +1,6 @@
 'use strict';
-module.exports = function () {
+module.exports = function (options) {
+    options = options || {};
 
     var emitter = require('emitter'),
         client  = require('./client'),
@@ -7,7 +8,9 @@ module.exports = function () {
         storage = require('../storage'),
         socket = emitter({});
 
-    storage({ backend: backend() }).addClient(socket);
+    storage({
+        backend: backend({data: options.data})
+    }).addClient(socket);
     return client({socket: socket});
 };
 

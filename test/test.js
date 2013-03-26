@@ -9,6 +9,27 @@ var storage = require('repo'),
 describeInterface('mock', mock);
 describeInterface('client', client);
 
+
+describe('mock', function () {
+    it('should be possible to add initial data to mock', function (done) {
+
+        var mock = storage.mock({
+            data: {
+                "10" : {
+                    _id: "10",
+                    example: 'expected'
+                }
+            }
+        });
+
+        mock.get('10', function (notification) {
+            notification.data._id.should.equal('10');
+            notification.data.example.should.equal('expected');
+            done();
+        });
+    });
+});
+
 function describeInterface(name, client) {
     describe(name, function () {
 
