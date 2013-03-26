@@ -16,7 +16,6 @@ describe('mock', function () {
         var mock = storage.mock({
             data: {
                 "10" : {
-                    _id: "10",
                     example: 'expected'
                 }
             }
