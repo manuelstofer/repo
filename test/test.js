@@ -1,10 +1,10 @@
-/*global describe, it, io*/
-
-    'use strict';
+'use strict';
 
 var storage = require('repo'),
-    mock = storage.mock(),
-    client = storage.client({socket: io.connect('http://localhost:2014')});
+    mock    = storage.mock(),
+    client  = storage.client({
+        socket: io.connect('http://localhost:2014')
+    });
 
 describeInterface('mock', mock);
 describeInterface('client', client);

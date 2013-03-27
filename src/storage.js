@@ -28,7 +28,10 @@ module.exports = function storage (options) {
          */
         queries         = {},
 
-        qemitter = emitter({});
+        /**
+         * Event emitter for internal communication between clients
+         */
+        bus = emitter({});
 
 
     return {
@@ -108,11 +111,9 @@ module.exports = function storage (options) {
                 unsubscribe = function (_id) {
                     subscriptionCount[_id] = Math.max(--subscriptionCount[_id], 0);
                     if (subscriptionCount[_id] === 0) {
-
-                        subscriptions[_id] = _.without(subscriptions[_id], client);
-
                         delete subscriptionCount[_id];
 
+                        subscriptions[_id] = _.without(subscriptions[_id], client);
                         if (subscriptions[_id].length === 0) {
                             delete subscriptions[_id];
                             delete queries[_id];
@@ -153,24 +154,18 @@ module.exports = function storage (options) {
                     oldObj = oldObj || {};
                     newObj = newObj || {};
 
-                    var _id = newObj._id || oldObj._id;
-
                     each(queries, function (query, queryId) {
-                        var oldMatch = query(oldObj),
-                            newMatch = query(newObj);
+                        var didMatch = query(oldObj),
+                            matches = query(newObj),
+                            event = didMatch ?
+                                (matches ? 'change' : 'unmatch') :
+                                (matches ? 'match': null);
 
-                        if (oldMatch != newMatch) {
-                            qemitter.emit('notify-query', queryId, {
-                                event: newMatch ? 'match' : 'unmatch',
+                        if (event) {
+                            bus.emit('notify-query', queryId, {
+                                event: event,
                                 data: newObj,
-                                _id: _id
-                            });
-
-                        } else if (newMatch) {
-                            qemitter.emit('notify-query', queryId, {
-                                event: 'change',
-                                data: newObj,
-                                _id: _id
+                                _id: newObj._id || oldObj._id
                             });
                         }
                     });
@@ -277,15 +272,22 @@ module.exports = function storage (options) {
                 }
                 subscriptionCount = null;
 
-                qemitter.off('notify-query', notifyQuery);
+                bus.off('notify-query', notifyQuery);
             });
 
+            /**
+             * Sends a notification to the client if the query is subscribed
+             *
+             * @param queryId
+             * @param notification
+             */
             function notifyQuery (queryId, notification) {
                 if (subscriptionCount[queryId]) {
                     client.emit('notify', queryId, notification);
                 }
             }
-            qemitter.on('notify-query', notifyQuery)
+
+            bus.on('notify-query', notifyQuery)
         }
     };
 };

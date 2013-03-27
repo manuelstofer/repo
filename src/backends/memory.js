@@ -1,18 +1,38 @@
 'use strict';
 
-var qry = require('qry');
+var qry = require('qry'),
+    _   = require('underscore');
 
+/**
+ * In-memory implementation of the storage backend interface
+ * - for development and mocks
+ *
+ * @param options
+ * @returns {{put: Function, get: Function, del: Function, query: Function}}
+ */
 module.exports = function (options) {
     options = options || {};
 
     var objs = options.data || {},
         autoIncId = 0;
 
+    /**
+     * Returns an incrementing number
+     *
+     * @returns {number}
+     */
     function autoInc () {
        while(typeof objs[++autoIncId] !== 'undefined');
        return autoIncId;
     }
 
+    /**
+     * Creates a deep cloned object, ensures only JSON compatible
+     * data is stored
+     *
+     * @param obj
+     * @returns {*}
+     */
     function getObjData (obj) {
         return JSON.parse(JSON.stringify(obj));
     }
@@ -44,17 +64,8 @@ module.exports = function (options) {
 
         query: function (query, fn) {
             var match = qry(query);
-            fn(null, values(objs).filter(match));
+            fn(null, _.filter(_.values(objs), match));
         }
     };
 };
 
-function values (obj) {
-    var vals = [];
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            vals.push(obj[key]);
-        }
-    }
-    return vals;
-}

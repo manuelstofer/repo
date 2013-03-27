@@ -1,3 +1,4 @@
+'use strict';
 var md5 = require('md5').digest_s;
 
 module.exports = function (query) {
