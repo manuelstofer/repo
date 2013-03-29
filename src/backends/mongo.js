@@ -1,6 +1,7 @@
 'use strict';
 
 var mongodb     = require("mongodb"),
+    queue       = require('../util/queue'),
     ObjectID    = mongodb.ObjectID,
     map         = require('mapr').map;
 
@@ -59,52 +60,73 @@ module.exports = function (options, callback) {
     var api = {
 
         put: function (obj, fn) {
-            var oldObj = {};
-            mongoId(obj);
+
+            var doPut = function (done) {
+                var oldObj = {};
+                mongoId(obj);
+
+                if (obj._id) {
+                    collection.find({_id: obj._id}).limit(1).toArray(function (err, docs) {
+                        oldObj = docs[0];
+                        var findErr = err || (docs.length != 1 ? 'error': null);
+
+                        if (findErr) {
+                            done();
+                            fn(findErr, {}, {});
+                        } else {
+                            collection.save(obj, {safe: true}, function (err) {
+                                done();
+                                fn(err, strId(obj), strId(oldObj));
+                            })
+                        }
+                    });
+                } else {
+                    collection.insert(obj, {safe: true}, function (err, docs) {
+                        done();
+                        fn(err, strId(docs[0]), strId(oldObj));
+                    });
+                }
+            };
 
             if (obj._id) {
-                collection.find({_id: obj._id}).limit(1).toArray(function (err, docs) {
-                    oldObj = docs[0];
-                    var findErr = err || (docs.length != 1 ? 'error': null);
-
-                    if (findErr) {
-                        fn(findErr, {}, {});
-                    } else {
-                        collection.save(obj, {safe: true}, function (err) {
-                            fn(err, strId(obj), strId(oldObj));
-                        })
-                    }
-                });
+                queue(obj._id)(doPut)
             } else {
-                collection.insert(obj, {safe: true}, function (err, docs) {
-                    fn(err, strId(docs[0]), strId(oldObj));
-                });
+                doPut(function () {});
             }
         },
 
         get: function (_id, fn) {
-            collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
-                fn(
-                    err || (docs.length != 1? 'error' : null),
-                    strId(docs[0])
-                );
-            });
+            var doGet = function (done) {
+                collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
+                    done();
+                    fn(
+                        err || (docs.length != 1? 'error' : null),
+                        strId(docs[0])
+                    );
+                });
+            };
+            queue(_id)(doGet);
         },
 
         del: function (_id, fn) {
-            collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
+            var doDel = function (done) {
+                collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
 
-                var findErr = err || (docs.length != 1 ? 'error': null),
-                    oldObj = docs[0];
+                    var findErr = err || (docs.length != 1 ? 'error': null),
+                        oldObj = docs[0];
 
-                if (findErr) {
-                    fn(findErr, {});
-                } else {
-                    collection.remove(mongoId({_id: _id}), true, function (err) {
-                        fn(err || findErr, strId(oldObj));
-                    });
-                }
-            });
+                    if (findErr) {
+                        done();
+                        fn(findErr, {});
+                    } else {
+                        collection.remove(mongoId({_id: _id}), true, function (err) {
+                            done();
+                            fn(err || findErr, strId(oldObj));
+                        });
+                    }
+                });
+            };
+            queue(_id)(doDel);
         },
 
         query: function (query, fn) {
