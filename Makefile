@@ -10,8 +10,11 @@ build:
 	@echo build
 	@./node_modules/.bin/component-build
 
+debug-build:
+	@echo debug build
+	@./node_modules/.bin/component-build -d
 
-test: build
+test: debug-build
 	./test/test-runner.sh
 
 test-install: install test
