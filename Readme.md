@@ -236,39 +236,31 @@ Following example will create a server for Repo with Express, Socket.io and Mong
 var express     = require('express'),
     app         = express(),
     http        = require('http'),
+    mongodb     = require('mongodb'),
     server      = http.createServer(app),
     io          = require('socket.io').listen(server),
+    storage     = require('../src/storage'),
 
-    repo        = require('repo'),
-    storage     = repo.storage,
-    mongo       = repo.backends.mongo,
+    backend     = require('../src/backends/mongo'),
+    mongoServer = new mongodb.Server('localhost', mongodb.Connection.DEFAULT_PORT),
+    connector   = new mongodb.Db(
+        'test',
+        mongoServer,
+        { safe: true }
+    );
 
-    // @see mongodb-native driver reference
-    options = {
-        server: {
-        	host: 'localhost',
-        	options: {}
-        },
-        db: {
-            name: 'test',
-            options: {
-                safe: true
-            }
-        },
-        collection: 'test'
-    };
+connector.open(function (error, client) {
+    var collection = new mongodb.Collection(client, 'test');
+    console.log('connected to mongodb');
 
-// connect to mongo db
-mongo(options, function (backend) {
-
-    // create storage
     var storageApi = storage({
-        backend: backend
+        backend: backend({collection: collection}),
+        debug: true
     });
 
-   	// add a new client
     io.sockets.on('connection', storageApi.addClient);
 });
+
 
 app.configure(function () {
     app.use(express.logger('dev'));
