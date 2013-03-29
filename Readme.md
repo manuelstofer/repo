@@ -116,7 +116,7 @@ The Example below retrieves the object with _id `10`, without following real-tim
 
 ```
 client.get(10, function (notification) {
-    console.log(notification.data);
+    console.log(notification.doc);
 });
 ```
 
@@ -128,11 +128,11 @@ for this purpose.
 
 ```
 client.get(10, function (notification, unsub) {
-    console.log(notification.data);
+    console.log(notification.doc);
 
     return function (notification) {
         if (notification.event === 'change') {
-            console.log('object changed:', notification.data);
+            console.log('object changed:', notification.doc);
         }
 
         if (notification.event === 'del') {
@@ -148,11 +148,11 @@ Its also supported to return an object with the events you are interested in as 
 
 ```
 client.get(10, function (notification, unsub) {
-    console.log(notification.data);
+    console.log(notification.doc);
 
     return {
         change: function (notification) {
-            console.log('changed to', notification.data);
+            console.log('changed to', notification.doc);
         }
 
         del: function (notification) {
@@ -177,7 +177,7 @@ var obj = {
 };
 
 client.put(obj, function (notification, unsub) {
-    console.log(notification.data);
+    console.log(notification.doc);
     return {
         del: function (notification) {
             console.log('object deleted');
@@ -208,15 +208,15 @@ for the query format and [qry](https://github.com/manuelstofer/qry) for supporte
 
 client.query({tag: 'hello'}, function (notification, unsub) {
 
-    console.log('results', notification.data);
+    console.log('results', notification.docs);
 
     return {
         change: function (notification) {
-            console.log('object in the result set changed', notification.data);
+            console.log('object in the result set changed', notification.doc);
         },
 
         match: function (notification) {
-            console.log('there is an new object with the tag "hello"', notification.data);
+            console.log('there is an new object with the tag "hello"', notification.doc);
         },
 
         unmatch: function (notification) {

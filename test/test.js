@@ -11,10 +11,10 @@ describeInterface('client', client);
 
 
 describe('mock', function () {
-    it('should be possible to add initial data to mock', function (done) {
+    it('should be possible to add initial documents to mock', function (done) {
 
         var mock = storage.mock({
-            data: {
+            docs: {
                 "10" : {
                     example: 'expected'
                 }
@@ -22,8 +22,8 @@ describe('mock', function () {
         });
 
         mock.get('10', function (notification) {
-            notification.data._id.should.equal('10');
-            notification.data.example.should.equal('expected');
+            notification.doc._id.should.equal('10');
+            notification.doc.example.should.equal('expected');
             done();
         });
     });
@@ -37,31 +37,31 @@ function describeInterface(name, client) {
             it('should get `create` notifications', function (done) {
                 client.put({example: 'expected'}, function (notification) {
                     notification.event.should.equal('create');
-                    notification.data.example.should.equal('expected');
-                    notification.data._id.should.not.be.undefined;
-                    removeData([notification.data], done);
+                    notification.doc.example.should.equal('expected');
+                    notification.doc._id.should.not.be.undefined;
+                    removeDocuments([notification.doc], done);
                 });
             });
 
             it('should get `change` notifications', function (done) {
                 client.put({example: 'expected'}, function (notification, unsub) {
-                    var obj = notification.data;
+                    var obj = notification.doc;
                     obj.example = 'changed';
 
                     client.put(obj);
 
                     return function (notification) {
                         notification.event.should.equal('change');
-                        notification.data.example.should.equal('changed');
+                        notification.doc.example.should.equal('changed');
                         unsub();
-                        removeData([obj], done);
+                        removeDocuments([obj], done);
                     };
                 });
             });
 
             it('should get `del` notifications', function (done) {
                 client.put({example: 'expected'}, function (notification, unsub) {
-                    var obj = notification.data;
+                    var obj = notification.doc;
                     client.del(obj._id);
 
                     return {
@@ -79,13 +79,13 @@ function describeInterface(name, client) {
 
             it('should get `change` notifications', function (done) {
                 client.put({example: 'expected'}, function (notification) {
-                    var obj = notification.data;
+                    var obj = notification.doc;
                     obj.example = 'changed';
                     client.put(obj, function (notification) {
                         notification.event.should.equal('change');
-                        notification.data.example.should.equal('changed');
-                        notification.data._id.should.not.be.undefined;
-                        removeData([obj], done);
+                        notification.doc.example.should.equal('changed');
+                        notification.doc._id.should.not.be.undefined;
+                        removeDocuments([obj], done);
                     });
                 });
             });
@@ -118,15 +118,15 @@ function describeInterface(name, client) {
                     obj2 = {tag: 'hello'},
                     obj3 = {tag: 'bla'};
 
-                createData([obj1, obj2, obj3], function (objs) {
+                createDocuments([obj1, obj2, obj3], function (objs) {
 
                     client.query({tag: 'hello'}, function (notification) {
                         notification.event.should.equal('query-result');
-                        notification.data.length.should.equal(2);
-                        notification.data[0].tag.should.equal('hello');
-                        notification.data[1].tag.should.equal('hello');
+                        notification.docs.length.should.equal(2);
+                        notification.docs[0].tag.should.equal('hello');
+                        notification.docs[1].tag.should.equal('hello');
 
-                        removeData(objs, done);
+                        removeDocuments(objs, done);
                     });
                 });
             });
@@ -134,10 +134,10 @@ function describeInterface(name, client) {
             it('should receive `unmatch` notification when object from result set is deleted', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function () {
+                createDocuments([obj1], function () {
 
                     client.query({tag: 'hello'}, function (notification, unsub) {
-                        var obj = notification.data[0];
+                        var obj = notification.docs[0];
                         client.del(obj._id);
                         return function (notification) {
                             unsub();
@@ -151,10 +151,10 @@ function describeInterface(name, client) {
             it('should receive `change` notifications for objects in result set', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
 
                     client.query({tag: 'hello'}, function (notification, unsub) {
-                        var obj = notification.data[0];
+                        var obj = notification.docs[0];
                         obj.example = 'hello';
                         client.put(obj);
 
@@ -162,7 +162,7 @@ function describeInterface(name, client) {
                             change: function (notification) {
                                 unsub();
                                 notification.event.should.equal('change');
-                                removeData(objs, done);
+                                removeDocuments(objs, done);
                             }
                         };
                     });
@@ -172,7 +172,7 @@ function describeInterface(name, client) {
             it('should receive `match` notification when new object matches the query', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
                     var query = {tag: 'hello'};
 
                     client.query(query, function (notification, unsub) {
@@ -182,11 +182,11 @@ function describeInterface(name, client) {
                         return {
                             match: function (notification) {
                                 notification.event.should.equal('match');
-                                notification.data.bla.should.equal('bla');
-                                notification.data.tag.should.equal('hello');
+                                notification.doc.bla.should.equal('bla');
+                                notification.doc.tag.should.equal('hello');
                                 unsub();
-                                objs.push(notification.data);
-                                removeData(objs, done);
+                                objs.push(notification.doc);
+                                removeDocuments(objs, done);
                             }
                         };
                     });
@@ -196,7 +196,7 @@ function describeInterface(name, client) {
             it('should receive `unmatch` notification when an object does not match the query anymore', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
                     var query = {tag: 'hello'},
                         obj = objs[0];
 
@@ -205,9 +205,9 @@ function describeInterface(name, client) {
                         client.put(obj);
                         return function (notification) {
                             notification.event.should.equal('unmatch');
-                            notification.data.tag.should.equal('changed');
+                            notification.doc.tag.should.equal('changed');
                             unsub();
-                            removeData(objs, done);
+                            removeDocuments(objs, done);
                         };
                     });
                 });
@@ -216,7 +216,7 @@ function describeInterface(name, client) {
             it('should receive `change` notifications for new objects matching a query', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
                     var query = {tag: 'hello'};
 
                     client.query(query, function (notification, unsub) {
@@ -225,7 +225,7 @@ function describeInterface(name, client) {
                             change;
 
                         client.put(add, function (notification) {
-                            change = notification.data;
+                            change = notification.doc;
                             change.title = 'changed';
                             client.put(change);
                         });
@@ -233,11 +233,11 @@ function describeInterface(name, client) {
                         return {
                             change: function (notification) {
                                 notification.event.should.equal('change');
-                                notification.data.title.should.equal('changed');
+                                notification.doc.title.should.equal('changed');
                                 unsub();
 
                                 objs.push(change);
-                                removeData(objs, done);
+                                removeDocuments(objs, done);
                             }
                         };
                     });
@@ -247,7 +247,7 @@ function describeInterface(name, client) {
             it('should receive `unmatch` notifications for objects added to result set and removed again', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
                     var query = {tag: 'hello'};
 
                     client.query(query, function (notification, unsub) {
@@ -255,7 +255,7 @@ function describeInterface(name, client) {
                         var add = {tag: 'hello', title: 'bla'};
 
                         client.put(add, function (notification) {
-                            client.del(notification.data._id);
+                            client.del(notification.doc._id);
                         });
 
                         return {
@@ -263,7 +263,7 @@ function describeInterface(name, client) {
                                 notification.event.should.equal('unmatch');
                                 unsub();
 
-                                removeData(objs, done);
+                                removeDocuments(objs, done);
                             }
                         };
                     });
@@ -273,16 +273,16 @@ function describeInterface(name, client) {
             it('should not receive notifications when unsubscribed', function (done) {
                 var obj1 = {tag: 'hello'};
 
-                createData([obj1], function (objs) {
+                createDocuments([obj1], function (objs) {
                     var query = {tag: 'hello'};
 
                     client.query(query, function (notification, unsub) {
-                        var change = notification.data[0];
+                        var change = notification.docs[0];
                         change.tag = 'no-match';
                         unsub();
 
                         client.put(change, function () {
-                            removeData(objs, done);
+                            removeDocuments(objs, done);
                         });
 
                         return function () {
@@ -294,12 +294,12 @@ function describeInterface(name, client) {
         });
     });
 
-    function createData(objs, fn) {
+    function createDocuments(objs, fn) {
         var i = 0,
             insertedObjs = [];
         objs.forEach(function (obj, index) {
             client.put(obj, function (notification) {
-                insertedObjs[index] = notification.data;
+                insertedObjs[index] = notification.doc;
                 if (++i === objs.length) {
                     fn(insertedObjs);
                 }
@@ -307,7 +307,7 @@ function describeInterface(name, client) {
         });
     }
 
-    function removeData(objs, fn) {
+    function removeDocuments(objs, fn) {
         var n = objs.length;
         objs.forEach(function (obj) {
             client.del(obj._id, function () {

@@ -8,17 +8,17 @@ module.exports = function (options) {
         storage = require('../storage'),
         map     = require('mapr').map,
         socket = emitter({}),
-        data;
+        docs;
 
-    if (options.data) {
-        data = map(options.data, function (obj, id) {
+    if (options.docs) {
+        docs = map(options.docs, function (obj, id) {
             obj._id = id;
             return obj;
         });
     }
 
     storage({
-        backend: backend({data: data})
+        backend: backend({docs: docs})
     }).addClient(socket);
     return client({socket: socket});
 };

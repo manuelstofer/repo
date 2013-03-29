@@ -13,7 +13,7 @@ var qry = require('qry'),
 module.exports = function (options) {
     options = options || {};
 
-    var objs = options.data || {},
+    var objs = options.docs || {},
         autoIncId = 0;
 
     /**

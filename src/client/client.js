@@ -45,7 +45,11 @@ module.exports = function (options) {
          */
         createCallback = function (_id, fn) {
             return function (notification) {
-                _id = _id || notification.data._id;
+
+                _id = _id;
+                if (notification.doc) {
+                    _id = notification.doc._id;
+                }
 
                 var handler,
                     isSubscribed = true,

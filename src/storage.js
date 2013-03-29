@@ -69,7 +69,8 @@ module.exports = function storage (options) {
          *      Structure:
          *      {
          *          event:  'create' | 'change' | 'del' | 'query-result' | 'match' | 'unmatch' | 'error'
-         *          data:   the payload data (object or query result) | undefined
+         *          doc:    document | undefined
+         *          docs:   query result | undefined
          *      }
          *
          *      Notification events for objects:
@@ -164,7 +165,7 @@ module.exports = function storage (options) {
                         if (event) {
                             bus.emit('notify-query', queryId, {
                                 event: event,
-                                data: newObj,
+                                doc: newObj,
                                 _id: newObj._id || oldObj._id
                             });
                         }
@@ -182,7 +183,7 @@ module.exports = function storage (options) {
 
                     var notification = {
                         event: err? 'error': event,
-                        data: obj
+                        doc: obj
                     };
 
                     if (callback) { callback(notification); }
@@ -209,7 +210,7 @@ module.exports = function storage (options) {
                 backend.get(_id, function (err, obj) {
                     var notification = {
                         event: err? 'error': 'get',
-                        data: obj
+                        doc: obj
                     };
                     if (callback) { callback(notification); }
                 });
@@ -242,7 +243,7 @@ module.exports = function storage (options) {
 
                     var notification = {
                         event: err? 'error': 'query-result',
-                        data: objs
+                        docs: objs
                     };
 
                     if (callback) { callback(notification); }
