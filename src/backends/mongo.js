@@ -36,8 +36,39 @@ module.exports = function (options) {
                 obj._id = obj._id.toString();
             }
             return obj;
-        };
+        },
 
+        /**
+         * Makes db operations execute sequential for operations on the
+         * same document
+         *
+         * -> only if options.sequential is true
+         *
+         * @see https://github.com/manuelstofer/repo/wiki/Concurrent-updates
+         * @param fn db operation function
+         */
+        sequential = function (fn) {
+
+            if (!options.sequential) {
+                return fn;
+            }
+
+            return function (obj, callback) {
+                var chanel = typeof obj === 'object' ? obj._id : obj,
+                    add = queue(chanel);
+
+                if (!chanel) {
+                    fn.apply(null, arguments);
+                } else {
+                    add(function (done) {
+                        fn(obj, function () {
+                            done();
+                            callback.apply(null, arguments);
+                        });
+                    });
+                }
+            }
+        };
 
     /**
      * Implementation of the storage backend interface
@@ -46,75 +77,55 @@ module.exports = function (options) {
      */
     return {
 
-        put: function (obj, fn) {
+        put: sequential(function (obj, fn) {
 
-            var doPut = function (done) {
-                var oldObj = {};
-                mongoId(obj);
-
-                if (obj._id) {
-                    collection.find({_id: obj._id}).limit(1).toArray(function (err, docs) {
-                        oldObj = docs[0];
-                        var findErr = err || (docs.length != 1 ? 'error': null);
-
-                        if (findErr) {
-                            done();
-                            fn(findErr, {}, {});
-                        } else {
-                            collection.save(obj, {safe: true}, function (err) {
-                                done();
-                                fn(err, strId(obj), strId(oldObj));
-                            })
-                        }
-                    });
-                } else {
-                    collection.insert(obj, {safe: true}, function (err, docs) {
-                        done();
-                        fn(err, strId(docs[0]), strId(oldObj));
-                    });
-                }
-            };
+            var oldObj = {};
+            mongoId(obj);
 
             if (obj._id) {
-                queue(obj._id)(doPut)
-            } else {
-                doPut(function () {});
-            }
-        },
-
-        get: function (_id, fn) {
-            var doGet = function (done) {
-                collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
-                    done();
-                    fn(
-                        err || (docs.length != 1? 'error' : null),
-                        strId(docs[0])
-                    );
-                });
-            };
-            queue(_id)(doGet);
-        },
-
-        del: function (_id, fn) {
-            var doDel = function (done) {
-                collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
-
-                    var findErr = err || (docs.length != 1 ? 'error': null),
-                        oldObj = docs[0];
+                collection.find({_id: obj._id}).limit(1).toArray(function (err, docs) {
+                    oldObj = docs[0];
+                    var findErr = err || (docs.length != 1 ? 'error': null);
 
                     if (findErr) {
-                        done();
-                        fn(findErr, {});
+                        fn(findErr, {}, {});
                     } else {
-                        collection.remove(mongoId({_id: _id}), true, function (err) {
-                            done();
-                            fn(err || findErr, strId(oldObj));
-                        });
+                        collection.save(obj, {safe: true}, function (err) {
+                            fn(err, strId(obj), strId(oldObj));
+                        })
                     }
                 });
-            };
-            queue(_id)(doDel);
-        },
+            } else {
+                collection.insert(obj, {safe: true}, function (err, docs) {
+                    fn(err, strId(docs[0]), strId(oldObj));
+                });
+            }
+        }),
+
+        get: sequential(function (_id, fn) {
+            collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
+                fn(
+                    err || (docs.length != 1? 'error' : null),
+                    strId(docs[0])
+                );
+            });
+        }),
+
+        del: sequential(function (_id, fn) {
+            collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
+
+                var findErr = err || (docs.length != 1 ? 'error': null),
+                    oldObj = docs[0];
+
+                if (findErr) {
+                    fn(findErr, {});
+                } else {
+                    collection.remove(mongoId({_id: _id}), true, function (err) {
+                        fn(err || findErr, strId(oldObj));
+                    });
+                }
+            });
+        }),
 
         query: function (query, fn) {
             collection.find(query).toArray(function (err, docs) {
