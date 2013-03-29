@@ -2,8 +2,8 @@
 var qry         = require('qry'),
     _           = require('underscore'),
     each        = require('foreach'),
-    getQueryId  = require('./query-id'),
-    emitter     = require('emitter');
+    emitter     = require('emitter'),
+    getQueryId  = require('./util/query-id');
 
 /**
  * Creates a storage for a backend specified by options.backend

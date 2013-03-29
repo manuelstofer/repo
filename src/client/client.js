@@ -3,7 +3,7 @@ var emitter = require('emitter'),
     each    = require('foreach'),
     map     = require('mapr').map,
     _       = require('underscore'),
-    getQueryId = require('../query-id');
+    getQueryId = require('../util/query-id');
 
 module.exports = function (options) {
 
