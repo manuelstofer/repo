@@ -39,17 +39,17 @@ module.exports = function (options) {
         },
 
         /**
-         * Makes db operations execute sequential for operations on the
-         * same document
+         * Makes db operations execute sequential for operations on
+         * the same document
          *
-         * -> only if options.sequential is true
+         * if options.concurrent is true db operations still executed concurrent
          *
          * @see https://github.com/manuelstofer/repo/wiki/Concurrent-updates
          * @param fn db operation function
          */
         sequential = function (fn) {
 
-            if (!options.sequential) {
+            if (options.concurrent) {
                 return fn;
             }
 
