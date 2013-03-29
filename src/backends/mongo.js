@@ -8,23 +8,10 @@ var mongodb     = require("mongodb"),
  * Backend implementation for MongoDB
  *
  * @param options
- * @param callback
  */
-module.exports = function (options, callback) {
+module.exports = function (options) {
 
-    var server = new mongodb.Server(
-            options.server.host || 'localhost',
-            options.server.port || mongodb.Connection.DEFAULT_PORT,
-            options.server.options
-        ),
-
-        connector = new mongodb.Db(
-            options.db.name,
-            server,
-            options.db.options
-        ),
-
-        collection,
+    var collection = options.collection,
 
         /**
          * Converts to object id to MongoDB ObjectID
@@ -56,7 +43,7 @@ module.exports = function (options, callback) {
      *
      * @type {{put: Function, get: Function, del: Function, query: Function}}
      */
-    var api = {
+    return {
 
         put: function (obj, fn) {
             var oldObj = {};
@@ -113,11 +100,4 @@ module.exports = function (options, callback) {
             });
         }
     };
-
-    connector.open(function (error, client) {
-        collection = new mongodb.Collection(client, options.collection);
-        collection.remove({}, function () {
-            callback(api);
-        });
-    });
 };
