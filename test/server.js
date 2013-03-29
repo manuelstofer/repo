@@ -26,7 +26,10 @@ connector.open(function (error, client) {
 
     collection.remove({}, function () {
         var storageApi = storage({
-            backend: mongo({collection: collection}),
+            backend: mongo({
+                collection: collection,
+                sequential: true
+            }),
             debug: true
         });
 
