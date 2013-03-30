@@ -17,7 +17,7 @@
 
 ## Implementation
 
-![Diagram](resources/diagram.png)
+![Repo event flow diagram](resources/diagram.png)
 
 ### Client
 
