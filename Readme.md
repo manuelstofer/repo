@@ -17,7 +17,7 @@
 
 ## Implementation
 
-![Repo event flow diagram](resources/diagram.png)
+![Repo event flow](resources/diagram.png)
 
 ### Client
 
@@ -69,13 +69,13 @@ Repo is currently tested with Phantom.js only.
 
 ## Installation
 
-Node (server side):
+Node (server side)
 
 ```bash
 npm install repo
 ```
 
-Browser:
+Browser
 
 ```bash
 component install manuelstofer/repo
@@ -92,7 +92,7 @@ var storage = require('repo'),
     });
 ````
 
-Mock:
+Mock
 
 ```Javascript
 var storage = require('repo'),
