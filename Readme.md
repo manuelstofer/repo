@@ -192,7 +192,7 @@ client.put(obj, function (notification, unsub) {
 
 Deletes an object
 
-```
+```Javascript
 client.del(10, function (notification) {
     console.log('the object with id 10 was deleted');
 });
@@ -231,7 +231,7 @@ Queries need manual unsubscription as well.
 
 Following example will create a server for Repo with Express, Socket.io and MongoDB
 
-```
+```Javascript
 var express     = require('express'),
     app         = express(),
     http        = require('http'),
