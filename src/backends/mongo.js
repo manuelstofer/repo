@@ -54,10 +54,10 @@ module.exports = function (options) {
             }
 
             return function (obj, callback) {
-                var chanel = typeof obj === 'object' ? obj._id : obj,
-                    add = queue(chanel);
+                var channel = typeof obj === 'object' ? obj._id : obj,
+                    add = queue(channel);
 
-                if (!chanel) {
+                if (!channel) {
                     fn.apply(null, arguments);
                 } else {
                     add(function (done) {

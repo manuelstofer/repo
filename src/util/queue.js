@@ -6,18 +6,18 @@ var queues = {};
 
 /**
  * Creates a queue to execute asynchronous functions sequential
- * in concurrent chanels
+ * in concurrent channels
  *
- * @param chanel
+ * @param channel
  * @returns {Function} add
  */
-function queue (chanel) {
+function queue (channel) {
 
     /**
      * Deletes the queue
      */
     function end () {
-        delete queues[chanel];
+        delete queues[channel];
     }
 
     /**
@@ -26,7 +26,7 @@ function queue (chanel) {
      * @returns {boolean} Returns false if the queue is empty
      */
     function next () {
-        var queue = queues[chanel],
+        var queue = queues[channel],
             fn = queue[0];
 
         fn && fn(function () {
@@ -45,8 +45,8 @@ function queue (chanel) {
      * @param fn
      */
     function add (fn) {
-        (queues[chanel] = queues[chanel] || []).push(fn);
-        queues[chanel].length === 1 && next();
+        (queues[channel] = queues[channel] || []).push(fn);
+        queues[channel].length === 1 && next();
     }
 
     return add;
