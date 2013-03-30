@@ -71,13 +71,13 @@ Repo is currently tested with Phantom.js only.
 
 Node (server side):
 
-```
+```bash
 npm install repo
 ```
 
 Browser:
 
-```
+```bash
 component install manuelstofer/repo
 ```
 
@@ -85,7 +85,7 @@ component install manuelstofer/repo
 
 Socket.io
 
-```
+```Javascript
 var storage = require('repo'),
     client  = storage.client({
         socket: io.connect('http://localhost')
@@ -94,7 +94,7 @@ var storage = require('repo'),
 
 Mock:
 
-```
+```Javascript
 var storage = require('repo'),
     client  = storage.mock(),
 ````
@@ -114,7 +114,7 @@ The client API provides following methods:
 
 The Example below retrieves the object with _id `10`, without following real-time notifications:
 
-```
+```Javascript
 client.get(10, function (notification) {
     console.log(notification.doc);
 });
@@ -126,7 +126,7 @@ The callback can return a function to receive real-time updates. This requires
 manual unsubscription. The callback gets an `unsub` function as second argument
 for this purpose.
 
-```
+```Javascript
 client.get(10, function (notification, unsub) {
     console.log(notification.doc);
 
@@ -146,7 +146,7 @@ client.get(10, function (notification, unsub) {
 
 Its also supported to return an object with the events you are interested in as keys.
 
-```
+```Javascript
 client.get(10, function (notification, unsub) {
     console.log(notification.doc);
 
@@ -170,7 +170,7 @@ client.get(10, function (notification, unsub) {
 Will update / insert an object. If the object has an `_id` attribute its treated as update.
 Otherwise its an insert. The update notification works the same way as described for the get method.
 
-```
+```Javascript
 var obj = {
     name: 'repo',
     version: 'experimental'
@@ -203,7 +203,7 @@ client.del(10, function (notification) {
 Repo can be queried with MongoDB queries. Please check the [MongoDB reference](http://docs.mongodb.org/manual/reference/operators/#query-selectors)
 for the query format and [qry](https://github.com/manuelstofer/qry) for supported operators.
 
-```
+```Javascript
 // query for objects with attribute tag equal to hello
 
 client.query({tag: 'hello'}, function (notification, unsub) {
@@ -212,15 +212,23 @@ client.query({tag: 'hello'}, function (notification, unsub) {
 
     return {
         change: function (notification) {
-            console.log('object in the result set changed', notification.doc);
+            console.log(
+                'object in the result set changed', 
+                notification.doc
+            );
         },
 
         match: function (notification) {
-            console.log('there is an new object with the tag "hello"', notification.doc);
+            console.log(
+                'new object with the tag "hello"',
+                notification.doc
+            );
         },
 
         unmatch: function (notification) {
-            console.log('an object does have the tag "hello" anymore or was deleted');
+            console.log(
+                'an object does match any more'
+            );
         }
     };
 });
@@ -242,7 +250,10 @@ var express     = require('express'),
     storage     = require('../src/storage'),
 
     backend     = require('../src/backends/mongo'),
-    mongoServer = new mongodb.Server('localhost', mongodb.Connection.DEFAULT_PORT),
+    mongoServer = new mongodb.Server(
+        'localhost', 
+        mongodb.Connection.DEFAULT_PORT
+    ),
     connector   = new mongodb.Db(
         'test',
         mongoServer,
