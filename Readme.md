@@ -209,26 +209,17 @@ for the query format and [qry](https://github.com/manuelstofer/qry) for supporte
 client.query({tag: 'hello'}, function (notification, unsub) {
 
     console.log('results', notification.docs);
-
     return {
         change: function (notification) {
-            console.log(
-                'object in the result set changed', 
-                notification.doc
-            );
+            console.log('changed', notification.doc);
         },
 
         match: function (notification) {
-            console.log(
-                'new object with the tag "hello"',
-                notification.doc
-            );
+            console.log('new result', notification.doc);
         },
 
         unmatch: function (notification) {
-            console.log(
-                'an object does match any more'
-            );
+            console.log('object does match any more');
         }
     };
 });
@@ -251,7 +242,7 @@ var express     = require('express'),
 
     backend     = require('../src/backends/mongo'),
     mongoServer = new mongodb.Server(
-        'localhost', 
+        'localhost',
         mongodb.Connection.DEFAULT_PORT
     ),
     connector   = new mongodb.Db(
@@ -271,7 +262,6 @@ connector.open(function (error, client) {
 
     io.sockets.on('connection', storageApi.addClient);
 });
-
 
 app.configure(function () {
     app.use(express.logger('dev'));
