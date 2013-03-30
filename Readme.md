@@ -120,7 +120,7 @@ client.get(10, function (notification) {
 });
 ```
 
-##### Update notifications
+#### Update notifications
 
 The callback can return a function to receive real-time updates. This requires
 manual unsubscription. The callback gets an `unsub` function as second argument
@@ -142,7 +142,7 @@ client.get(10, function (notification, unsub) {
 });
 ```
 
-##### Callback objects
+#### Callback objects
 
 Its also supported to return an object with the events you are interested in as keys.
 
