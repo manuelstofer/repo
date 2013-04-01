@@ -80,7 +80,13 @@ module.exports = function (options) {
         put: sequential(function (obj, fn) {
 
             var oldObj = {};
-            mongoId(obj);
+            try {
+                mongoId(obj);
+            } catch (e) {
+                console.log('invalid id:', obj._id);
+                fn('invalid-id', null);
+            }
+
 
             if (obj._id) {
                 collection.find({_id: obj._id}).limit(1).toArray(function (err, docs) {
@@ -103,12 +109,17 @@ module.exports = function (options) {
         }),
 
         get: sequential(function (_id, fn) {
-            collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
-                fn(
-                    err || (docs.length != 1? 'error' : null),
-                    strId(docs[0])
-                );
-            });
+            try {
+                collection.find(mongoId({_id: _id})).limit(1).toArray(function (err, docs) {
+                    fn(
+                        err || (docs.length != 1? 'error' : null),
+                        strId(docs[0])
+                    );
+                });
+
+            } catch (e) {
+                fn('invalid-id', null);
+            }
         }),
 
         del: sequential(function (_id, fn) {
