@@ -42,7 +42,7 @@ update notification to all connected clients. The database is accessed through a
 Repo provides a backend for MongoDB and one implementing an in-memory storage. The in-memory backend
 can be used for development and as a mock for unit tests.
 
-It assumes that only repo accesses the database. It won't provide real-time updates for
+The MongoDB backend assumes that only repo accesses the database. It won't provide real-time updates for
 objects changed in other ways.
 
 
