@@ -27,9 +27,9 @@ The client provides the API to access the database.
 ### Transport
 
 The client communicates with the storage over [socket.io](https://github.com/learnboost/socket.io/).
-But any other `event emitter` providing `.emit`, `.on,` `.off` will work as transport layer as long as it
-executes callbacks on the client side.
-
+But any other `event emitter` providing `.emit`, `.on,` `.off`. If the storage and client run
+in different environments the transport layer must execute callback methods in the
+same environment the event is emitted. (like socket.io)
 
 ### Storage
 
