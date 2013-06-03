@@ -102,7 +102,7 @@ var storage = require('repo'),
 
 ## API
 
-The client API provides following methods:
+The client API provides the following methods:
 
 - get
 - put
