@@ -112,7 +112,7 @@ The client API provides the following methods:
 
 ### get
 
-The Example below retrieves the object with _id `10`, without following real-time notifications:
+The example below retrieves the object with _id `10`, without following real-time notifications:
 
 ```Javascript
 client.get(10, function (notification) {
@@ -144,7 +144,7 @@ client.get(10, function (notification, unsub) {
 
 #### Callback objects
 
-Its also supported to return an object with the events you are interested in as keys.
+It's also supported to return an object with the events you are interested in as keys.
 
 ```Javascript
 client.get(10, function (notification, unsub) {
@@ -167,8 +167,8 @@ client.get(10, function (notification, unsub) {
 ### put
 
 
-Will update / insert an object. If the object has an `_id` attribute its treated as update.
-Otherwise its an insert. The update notification works the same way as described for the get method.
+Will update / insert an object. If the object has an `_id` attribute it's treated as update.
+Otherwise it's an insert. The update notification works the same way as described for the get method.
 
 ```Javascript
 var obj = {
@@ -190,7 +190,7 @@ client.put(obj, function (notification, unsub) {
 
 ### del
 
-Deletes an object
+Deletes an object.
 
 ```Javascript
 client.del(10, function (notification) {
@@ -229,7 +229,7 @@ Queries need manual unsubscription as well.
 
 ### Server
 
-Following example will create a server for Repo with Express, Socket.io and MongoDB
+The following example will create a server for Repo with Express, Socket.io and MongoDB
 
 ```Javascript
 var express     = require('express'),
